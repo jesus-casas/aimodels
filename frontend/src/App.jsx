@@ -3,21 +3,22 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Toast from './components/Toast';
 
 // Private
-import WelcomePage from './pages/WelcomePage';
+import WelcomePage from './pages/private/WelcomePage';
 
 // Public Pages:
-import Signup from './pages/Sign-up/Signup';
-import Login from './pages/Login';
-import SendResetLinkPage from './pages/Reset-Password/SendResetLinkPage';
-import LockedOutPage from './pages/Reset-Password/LockedOutPage';
+import Signup from './pages/public/Signup';
+import Login from './pages/public/Login';
+import SendResetLinkPage from './pages/public/SendResetLinkPage';
+import LockedOutPage from './pages/public/LockedOutPage';
+import Chat from './pages/public/chat';
 
 // Sign up flow:
-import ConfirmEmail from './pages/Sign-up/ConfirmEmailPage';
-import SecurityQuestionsPageSignup from './pages/Sign-up/SecurityQuestionsPageSignup';
+import ConfirmEmail from './pages/private/Sign-up/ConfirmEmailPage';
+import SecurityQuestionsPageSignup from './pages/private/Sign-up/SecurityQuestionsPageSignup';
 
 // Reset Password flow:
-import SecurityQuestions from './pages/Reset-Password/SecurityQuestionsPage';
-import ResetPassword from './pages/Reset-Password/ResetPasswordPage';
+import SecurityQuestions from './pages/private/Reset-Password/SecurityQuestionsPage';
+import ResetPassword from './pages/private/Reset-Password/ResetPasswordPage';
 
 // Auth Provider
 import { AuthProvider } from './context/AuthContext';
@@ -79,7 +80,7 @@ const AppContent = () => {
           </ProtectedRoute>
         } />
         <Route path="/locked-out" element={<LockedOutPage />} />
-
+        <Route path="/chat" element={<Chat />} />
         {/* Protected Routes */}
         <Route path="/welcome" element={
           <ProtectedRoute>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../../../store/authStore';
 
 const SecurityQuestionsPageSignup = () => {
   const [selectedQuestions, setSelectedQuestions] = useState(['', '', '']);

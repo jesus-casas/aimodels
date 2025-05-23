@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { passwordRequirements } from '../../utils/validation';
-import useAuthStore from '../../store/authStore';
+import { passwordRequirements } from '../../../utils/validation';
+import useAuthStore from '../../../store/authStore';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();

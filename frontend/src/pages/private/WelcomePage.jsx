@@ -1,6 +1,6 @@
 import React from 'react';
-import useAuthStore from '../store/authStore';
-import { authAPI } from '../services/api';
+import useAuthStore from '../../store/authStore';
+import { authAPI } from '../../services/api';
 
 const WelcomePage = () => {
   const { user, logout } = useAuthStore();

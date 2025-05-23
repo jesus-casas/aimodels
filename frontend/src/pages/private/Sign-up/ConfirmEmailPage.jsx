@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../../../store/authStore';
 
 const ConfirmEmailPage = () => {
   const navigate = useNavigate();
