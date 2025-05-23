@@ -21,6 +21,10 @@ app.use(express.json());
 const downloadRoute = require("./routes/download.route");
 app.use("/downloads", downloadRoute);
 
+// Register Chat Route
+const chatRoute = require("./routes/chat.route");
+app.use("/api/chat", chatRoute);
+
 // Function to schedule resetting of security question attempts after 3 minutes
 const scheduleSecurityQuestionsReset = async (userId) => {
   console.log(`Scheduling reset of security question attempts for user ID: ${userId}`);
