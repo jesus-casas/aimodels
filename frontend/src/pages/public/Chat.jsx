@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import folderImg from '../../images/folder.png';
 import editImg from '../../images/edit.png';
-import shareImg from '../../images/share.png';
 import sidebarImg from '../../images/sidebar.png';
 import interfaceImg from '../../images/interface.png';
 import arrowDownImg from '../../images/arrow-down.png';
@@ -14,20 +13,18 @@ import qwenColorLogo from '../../images/qwen-color.svg';
 import grokLogo from '../../images/grok.svg';
 
 // Icon component using imported images
-const Icon = ({ name, style = {}, className = '' }) => {
+const Icon = ({ name, style = {}, className = '', onClick }) => {
   switch (name) {
     case 'folder':
-      return <img src={folderImg} alt="folder" style={{ width: 28, height: 28, ...style }} className={className} />;
+      return <img src={folderImg} alt="folder" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
     case 'edit':
-      return <img src={editImg} alt="edit" style={{ width: 30, height: 30, ...style }} className={className} />;
-    case 'share':
-      return <img src={shareImg} alt="share" style={{ width: 28, height: 25, ...style }} className={className} />;
+      return <img src={editImg} alt="edit" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
     case 'sidebar':
-      return <img src={sidebarImg} alt="sidebar" style={{ width: 28, height: 28, ...style }} className={className} />;
+      return <img src={sidebarImg} alt="sidebar" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
     case 'interface':
-      return <img src={interfaceImg} alt="interface" style={{ width: 25, height: 25, ...style }} className={className} />;
+      return <img src={interfaceImg} alt="interface" style={{ width: 28, height: 28, ...style }} className={className} onClick={onClick} />;
     case 'arrow-down':
-      return <img src={arrowDownImg} alt="arrow down" style={{ width: 18, height: 18, ...style }} className={className} />;
+      return <img src={arrowDownImg} alt="arrow down" style={{ width: 18, height: 18, ...style }} className={className} onClick={onClick} />;
     default:
       return null;
   }
@@ -75,6 +72,8 @@ const Chat = () => {
   const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [dropdownHover, setDropdownHover] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,118 +136,119 @@ const Chat = () => {
   return (
     <div style={styles.container}>
       {/* Sidebar */}
-      <div style={styles.sidebar}>
-        <div style={styles.sidebarTop}>
-          <div style={styles.sidebarTopRow}>
-            <Icon name="sidebar" style={{ marginRight: 12, cursor: 'pointer' }} />
-            <div style={{ flex: 1 }} />
-            <Icon name="edit" style={{ marginRight: 10, cursor: 'pointer' }} />
-          </div>
-          <div style={styles.logoRow}>
-            <span style={styles.logo}>AI Models</span>
-          </div>
-          <div style={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="Search..."
-              style={styles.searchInput}
-              disabled
-            />
-          </div>
-        </div>
-        <div style={styles.projectsSection}>
-          <div style={styles.projectsTitle}>Projects</div>
-          {folders.map(folder => (
-            <div
-              key={folder.id}
-              style={{
-                ...styles.folderItem,
-                borderLeft: `4px solid ${folder.color}`,
-                ...(selectedFolder === folder.id && styles.selectedItem)
-              }}
-              onClick={() => setSelectedFolder(folder.id)}
-            >
-              <Icon name="folder" style={{ marginRight: 8 }} /> {folder.name}
-            </div>
-          ))}
-        </div>
-        <div style={styles.todaySection}>
-          <div style={styles.todayTitle}>Today</div>
-          <div style={styles.todayItem}>React Project Folder Structure</div>
-        </div>
-        {/* Chat History Section */}
-        <div style={styles.chatHistorySection}>
-          <div style={styles.chatsTitle}>Chats</div>
-          {chatHistory
-            .filter(chat => chat.folderId === selectedFolder)
-            .map(chat => (
-              <div
-                key={chat.id}
-                style={{
-                  ...styles.chatItem,
-                  ...(selectedChat === chat.id && styles.selectedItem)
+      {sidebarVisible && (
+        <div style={styles.sidebar}>
+          <div style={styles.sidebarTop}>
+            <div style={styles.sidebarTopRow}>
+              <Icon
+                name="sidebar"
+                style={{ marginRight: 12, cursor: 'pointer' }}
+                onClick={() => {
+                  console.log('Sidebar icon clicked: hiding sidebar');
+                  setSidebarVisible(false);
                 }}
-              >
-                {chat.title}
-              </div>
-            ))}
+              />
+              <div style={{ flex: 1 }} />
+              <Icon name="edit" style={{ marginRight: 10, cursor: 'pointer' }} />
+            </div>
+            <div style={styles.logoRow}>
+              <span style={styles.logo}>AI Models</span>
+            </div>
+          </div>
+          <div style={styles.chatHistorySection}>
+            <div style={styles.chatsTitle}>Chats</div>
+            {chatHistory
+              .map(chat => (
+                <div
+                  key={chat.id}
+                  style={{
+                    ...styles.chatItem,
+                    ...(selectedChat === chat.id && styles.selectedItem)
+                  }}
+                >
+                  {chat.title}
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
+      )}
       {/* Main Chat Area */}
       <div style={styles.mainArea}>
         {/* Header with model dropdown */}
         <div style={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', position: 'relative', padding: '0 24px' }}>
-            <div style={styles.modelDropdownWrapper}>
-              <div
-                style={styles.modelDropdown}
-                onClick={() => setShowDropdown(v => !v)}
-                tabIndex={0}
-              >
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {selectedModel.img && (
-                    <img src={selectedModel.img} alt={selectedModel.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
-                  )}
-                  <span style={styles.modelLabel}>{selectedModel.label}</span>
-                </div>
-                <Icon name="arrow-down" style={styles.dropdownArrow} />
-              </div>
-              {showDropdown && (
-                <div style={styles.dropdownMenu}>
-                  {modelOptions.map((option, idx) => (
-                    <div
-                      key={option.label}
-                      style={{
-                        ...styles.dropdownItem,
-                        ...(selectedModel.label === option.label ? styles.dropdownSelected : {}),
-                        display: 'flex', alignItems: 'center'
-                      }}
-                      onClick={() => {
-                        setSelectedModel(option);
-                        setShowDropdown(false);
-                      }}
-                    >
-                      {option.img && (
-                        <img src={option.img} alt={option.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
-                      )}
-                      <span style={{ verticalAlign: 'middle' }}>{option.label}</span>
-                      <div style={{ fontSize: '0.85em', color: '#666', marginLeft: 8 }}>{option.desc}</div>
-                    </div>
-                  ))}
-                </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            justifyContent: 'space-between',
+            position: 'relative',
+            padding: '0 24px'
+          }}>
+            {/* Left section: sidebar icon + model dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {!sidebarVisible && (
+                <Icon
+                  name="sidebar"
+                  style={{ marginRight: 12, cursor: 'pointer' }}
+                  onClick={() => setSidebarVisible(true)}
+                />
               )}
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    ...styles.modelDropdown,
+                    background: dropdownHover ? '#f0f0f0' : '#fff',
+                    border: 'none',
+                    boxShadow: dropdownHover ? '0 1px 4px rgba(0,0,0,0.04)' : 'none',
+                  }}
+                  onClick={() => setShowDropdown(v => !v)}
+                  onMouseEnter={() => setDropdownHover(true)}
+                  onMouseLeave={() => setDropdownHover(false)}
+                  tabIndex={0}
+                >
+                  {/* Model Dropdown */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {selectedModel.img && (
+                      <img src={selectedModel.img} alt={selectedModel.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
+                    )}
+                    <span style={styles.modelLabel}>{selectedModel.label}</span>
+                  </div>
+                  <Icon name="arrow-down" style={styles.dropdownArrow} />
+                </div>
+                {showDropdown && (
+                  <div style={styles.dropdownMenu}>
+                    {modelOptions.map((option, idx) => (
+                      <div
+                        key={option.label}
+                        style={{
+                          ...styles.dropdownItem,
+                          ...(selectedModel.label === option.label ? styles.dropdownSelected : {}),
+                          display: 'flex', alignItems: 'center'
+                        }}
+                        onClick={() => {
+                          setSelectedModel(option);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        {option.img && (
+                          <img src={option.img} alt={option.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
+                        )}
+                        <span style={{ verticalAlign: 'middle' }}>{option.label}</span>
+                        <div style={{ fontSize: '0.85em', color: '#66666', marginLeft: 8 }}>{option.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{}} />
-            <div style={{}} />
-            <Icon name="share" style={{ cursor: 'pointer' }} />
           </div>
         </div>
         {/* Chat Window */}
         <div style={styles.chatArea}>
           {messages.length === 0 && !isLoading ? (
             <div style={styles.emptyState}>
-              <div style={styles.emptyTitle}>What are you working on?</div>
-              <div style={styles.emptySubtitle}>Start a conversation with your AI assistant.</div>
+              <div style={styles.emptyTitle}>Ready when you are.</div>
+              <div style={styles.emptySubtitle}>Start a conversation with today's highest performing AI models.</div>
             </div>
           ) : (
             <div style={styles.messagesContainer}>
@@ -261,9 +261,6 @@ const Chat = () => {
                   }}
                 >
                   <div style={styles.messageContent}>{message.content}</div>
-                  <div style={styles.messageTimestamp}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </div>
                 </div>
               ))}
               {isLoading && (
@@ -277,9 +274,10 @@ const Chat = () => {
         </div>
         {/* Input Bar */}
         <form style={styles.inputForm} onSubmit={handleSendMessage}>
-          <button type="button" style={styles.inputIconButton} tabIndex={-1}>
+          {/* TODO: Add a button to add image button chat */}
+          {/* <button type="button" style={styles.inputIconButton} tabIndex={-1}>
             +
-          </button>
+          </button> */}
           <input
             type="text"
             value={input}
@@ -333,64 +331,6 @@ const styles = {
     fontSize: '1.4rem',
     color: '#222',
   },
-  searchBar: {
-    display: 'flex',
-    alignItems: 'center',
-    background: '#f5f5f5',
-    borderRadius: '6px',
-    padding: '0.4rem 0.8rem',
-    marginBottom: '1.2rem',
-  },
-  searchInput: {
-    border: 'none',
-    background: 'transparent',
-    outline: 'none',
-    fontSize: '1rem',
-    marginLeft: '0.5rem',
-    width: '100%',
-    color: '#888',
-  },
-  projectsSection: {
-    padding: '1rem 1.5rem 0.5rem 1.5rem',
-    borderBottom: '1px solid #f0f0f0',
-  },
-  projectsTitle: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    color: '#222',
-    marginBottom: '0.7rem',
-  },
-  folderItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '1rem',
-    color: '#333',
-    cursor: 'pointer',
-    padding: '0.5rem 0.5rem 0.5rem 0.7rem',
-    borderRadius: '4px',
-    marginBottom: '0.2rem',
-    background: 'none',
-    transition: 'background 0.2s',
-  },
-  selectedItem: {
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
-  },
-  todaySection: {
-    padding: '1rem 1.5rem',
-  },
-  todayTitle: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    color: '#222',
-    marginBottom: '0.5rem',
-  },
-  todayItem: {
-    fontSize: '1rem',
-    color: '#333',
-    marginBottom: '0.2rem',
-  },
   mainArea: {
     flex: 1,
     display: 'flex',
@@ -416,16 +356,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    background: '#f5f5f5',
+    background: '#fff',
     borderRadius: '6px',
     padding: '0.5rem 1.2rem',
     fontSize: '1.1rem',
     fontWeight: 600,
     color: '#222',
     cursor: 'pointer',
-    border: '1px solid #e0e0e0',
     minWidth: '180px',
     userSelect: 'none',
+    transition: 'background 0.2s, box-shadow 0.2s',
   },
   modelLabel: {
     flex: 1,
@@ -481,7 +421,7 @@ const styles = {
     fontSize: '2rem',
     fontWeight: 700,
     marginBottom: '0.5rem',
-    color: '#222',
+    color: '#000000',
   },
   emptySubtitle: {
     fontSize: '1.1rem',
@@ -499,10 +439,9 @@ const styles = {
   },
   message: {
     maxWidth: '60%',
-    padding: '1rem',
-    borderRadius: '12px',
+    padding: '0.5rem 1rem',
+    borderRadius: '24px',
     fontSize: '1rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
     marginLeft: '1.5rem',
     marginRight: '1.5rem',
   },
@@ -511,6 +450,7 @@ const styles = {
     backgroundColor: '#4A90E2',
     color: 'white',
     marginRight: '2.5rem',
+    borderRadius: '24px',
   },
   aiMessage: {
     alignSelf: 'flex-start',
@@ -518,15 +458,11 @@ const styles = {
     color: '#333',
     border: '1px solid #e0e0e0',
     marginLeft: '2.5rem',
+    borderRadius: '24px',
   },
   messageContent: {
-    marginBottom: '0.25rem',
-  },
-  messageTimestamp: {
-    fontSize: '0.8rem',
-    opacity: 0.6,
-    marginTop: '0.3rem',
-    textAlign: 'right',
+    marginBottom: 0,
+
   },
   loadingMessage: {
     alignSelf: 'flex-start',
@@ -563,16 +499,6 @@ const styles = {
     outline: 'none',
     background: '#f5f5f5',
     margin: '0 0.5rem',
-  },
-  inputIconButton: {
-    background: 'none',
-    border: 'none',
-    color: '#666',
-    fontSize: '1.3rem',
-    cursor: 'pointer',
-    padding: '0.5rem',
-    borderRadius: '50%',
-    transition: 'background 0.2s',
   },
   chatHistorySection: {
     padding: '1rem 1.5rem 0.5rem 1.5rem',
