@@ -258,7 +258,7 @@ export const tempChatAPI = {
     const response = await fetch(`${API_BASE_URL}/tempchat/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id, role, content, model })
+      body: JSON.stringify({ chat_id, role, content, model: model.toLowerCase() })
     });
     return handleResponse(response);
   },
