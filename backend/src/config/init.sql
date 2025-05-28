@@ -5,6 +5,11 @@ DROP TABLE IF EXISTS login_history CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS email_verification_tokens CASCADE;
 DROP TABLE IF EXISTS password_reset_attempts CASCADE;
+DROP TABLE IF EXISTS user_chat_messages CASCADE;
+DROP TABLE IF EXISTS user_chats CASCADE;
+DROP TABLE IF EXISTS temp_chat_messages CASCADE;
+DROP TABLE IF EXISTS temp_chats CASCADE;
+DROP TABLE IF EXISTS user_credits CASCADE;
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
@@ -76,4 +81,49 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     token TEXT NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-); 
+);
+
+-- Permanent user chats
+CREATE TABLE IF NOT EXISTS user_chats (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_chat_messages (
+    id SERIAL PRIMARY KEY,
+    chat_id INTEGER REFERENCES user_chats(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- 'user' or 'assistant'
+    content TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Temporary/anonymous user chats
+CREATE TABLE IF NOT EXISTS temp_chats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS temp_chat_messages (
+    id SERIAL PRIMARY KEY,
+    chat_id UUID REFERENCES temp_chats(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- 'user' or 'assistant'
+    content TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User credits (token/money tracking)
+CREATE TABLE IF NOT EXISTS user_credits (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    credits NUMERIC(12,2) DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cleanup job: Delete inactive chats
+DELETE FROM temp_chats WHERE last_activity < NOW() - INTERVAL '1 hour'; 

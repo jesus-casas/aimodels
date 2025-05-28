@@ -9,6 +9,7 @@ const { sendEmail } = require('./utils/emailTransport');
 const initializeDatabase = require('./config/init-db');
 const createTestUser = require('./scripts/create-test-user');
 const axios = require('axios');
+const tempChatRoute = require('./routes/tempChat.route');
 require('dotenv').config();
 
 const app = express();
@@ -24,6 +25,9 @@ app.use("/downloads", downloadRoute);
 // Register Chat Route
 const chatRoute = require("./routes/chat.route");
 app.use("/api/chat", chatRoute);
+
+// Register Temp Chat Route
+app.use('/api/tempchat', tempChatRoute);
 
 // Function to schedule resetting of security question attempts after 3 minutes
 const scheduleSecurityQuestionsReset = async (userId) => {
