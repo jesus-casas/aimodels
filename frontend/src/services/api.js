@@ -251,5 +251,15 @@ export const tempChatAPI = {
       headers: { 'Content-Type': 'application/json' }
     });
     return handleResponse(response);
-  }
+  },
+
+  // Multi-turn chat completion for anonymous users
+  completeChat: async ({ chat_id, role, content, model }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id, role, content, model })
+    });
+    return handleResponse(response);
+  },
 }; 

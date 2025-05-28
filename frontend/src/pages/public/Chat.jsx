@@ -146,19 +146,23 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      await tempChatAPI.addMessage({ chat_id: selectedChat, role: 'user', content: input });
-      // Simulate AI response
-      setTimeout(() => {
-        const aiResponse = {
+      // Call the multi-turn chat completion endpoint
+      const aiResponse = await tempChatAPI.completeChat({
+        chat_id: selectedChat,
+        role: 'user',
+        content: input,
+        model: selectedModel.label
+      });
+      setMessages(prev => [
+        ...prev,
+        {
           id: Date.now() + 1,
-          content: "This is a simulated AI response. In a real implementation, this would be connected to an AI model API.",
+          content: aiResponse.content,
           role: 'assistant',
           timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiResponse]);
-        tempChatAPI.addMessage({ chat_id: selectedChat, role: 'assistant', content: aiResponse.content });
-        setIsLoading(false);
-      }, 1000);
+        }
+      ]);
+      setIsLoading(false);
     } catch (error) {
       console.error('Failed to send message:', error);
       setIsLoading(false);
