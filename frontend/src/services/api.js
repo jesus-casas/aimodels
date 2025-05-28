@@ -211,4 +211,45 @@ export const authAPI = {
     link.remove();
     window.URL.revokeObjectURL(url);
   },
+};
+
+// Temp Chat API endpoints for anonymous users
+export const tempChatAPI = {
+  // Create a new temp chat
+  createChat: async ({ session_id, title }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/chats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id, title })
+    });
+    return handleResponse(response);
+  },
+
+  // Get all chats for a session
+  getChats: async (session_id) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/chats/${session_id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return handleResponse(response);
+  },
+
+  // Add a message to a temp chat
+  addMessage: async ({ chat_id, role, content }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id, role, content })
+    });
+    return handleResponse(response);
+  },
+
+  // Get all messages for a temp chat
+  getMessages: async (chat_id) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/messages/${chat_id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return handleResponse(response);
+  }
 }; 

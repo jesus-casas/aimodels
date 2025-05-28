@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
+import { tempChatAPI } from '../../services/api';
 import folderImg from '../../images/folder.png';
 import editImg from '../../images/edit.png';
 import sidebarImg from '../../images/sidebar.png';
@@ -54,26 +55,62 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [folders] = useState([
-    { id: 1, name: '424', color: '#1976d2' },
-    { id: 2, name: 'math 445', color: '#ffb300' },
-    { id: 3, name: 'Interview / Resume', color: '#388e3c' },
-    { id: 4, name: '484', color: '#d32f2f' },
-    { id: 5, name: 'senior project', color: '#388e3c' },
-  ]);
   const [selectedFolder, setSelectedFolder] = useState(1);
-  const [chatHistory, setChatHistory] = useState([
-    { id: 1, title: 'New Chat', folderId: 1, messages: [] },
-    { id: 2, title: 'Project Discussion', folderId: 1, messages: [] },
-    { id: 3, title: 'Code Review', folderId: 2, messages: [] }
-  ]);
-  const [selectedChat, setSelectedChat] = useState(1);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [dropdownHover, setDropdownHover] = useState(false);
+
+  // Get or generate a session_id for anonymous users
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem('anonymous_session_id');
+    if (!sessionId) {
+      sessionId = Date.now().toString();
+      localStorage.setItem('anonymous_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChats = async () => {
+      const sessionId = getSessionId();
+      try {
+        const chats = await tempChatAPI.getChats(sessionId);
+        setChatHistory(chats);
+        if (chats.length > 0) {
+          setSelectedChat(chats[0].id);
+        } else {
+          // If no chats exist, create a new one
+          const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
+          setChatHistory([newChat]);
+          setSelectedChat(newChat.id);
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+    loadChats();
+  }, []);
+
+  // Load messages when a chat is selected
+  useEffect(() => {
+    if (selectedChat) {
+      const loadMessages = async () => {
+        try {
+          const msgs = await tempChatAPI.getMessages(selectedChat);
+          setMessages(msgs);
+        } catch (error) {
+          console.error('Failed to load messages:', error);
+        }
+      };
+      loadMessages();
+    }
+  }, [selectedChat]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -95,7 +132,7 @@ const Chat = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !selectedChat) return;
 
     const newMessage = {
       id: Date.now(),
@@ -108,29 +145,36 @@ const Chat = () => {
     setInput('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: Date.now() + 1,
-        content: "This is a simulated AI response. In a real implementation, this would be connected to an AI model API.",
-        role: 'assistant',
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiResponse]);
+    try {
+      await tempChatAPI.addMessage({ chat_id: selectedChat, role: 'user', content: input });
+      // Simulate AI response
+      setTimeout(() => {
+        const aiResponse = {
+          id: Date.now() + 1,
+          content: "This is a simulated AI response. In a real implementation, this would be connected to an AI model API.",
+          role: 'assistant',
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, aiResponse]);
+        tempChatAPI.addMessage({ chat_id: selectedChat, role: 'assistant', content: aiResponse.content });
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Failed to send message:', error);
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleNewChat = () => {
-    const newChat = {
-      id: Date.now(),
-      title: 'New Chat',
-      folderId: selectedFolder,
-      messages: []
-    };
-    setChatHistory(prev => [...prev, newChat]);
-    setSelectedChat(newChat.id);
-    setMessages([]);
+  const handleNewChat = async () => {
+    const sessionId = getSessionId();
+    try {
+      const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
+      setChatHistory(prev => [...prev, newChat]);
+      setSelectedChat(newChat.id);
+      setMessages([]);
+    } catch (error) {
+      console.error('Failed to create new chat:', error);
+    }
   };
 
   return (
@@ -149,7 +193,7 @@ const Chat = () => {
                 }}
               />
               <div style={{ flex: 1 }} />
-              <Icon name="edit" style={{ marginRight: 10, cursor: 'pointer' }} />
+              <Icon name="edit" style={{ marginRight: 10, cursor: 'pointer' }} onClick={handleNewChat} />
             </div>
             <div style={styles.logoRow}>
               <span style={styles.logo}>AI Models</span>
@@ -165,6 +209,7 @@ const Chat = () => {
                     ...styles.chatItem,
                     ...(selectedChat === chat.id && styles.selectedItem)
                   }}
+                  onClick={() => setSelectedChat(chat.id)}
                 >
                   {chat.title}
                 </div>
@@ -518,6 +563,10 @@ const styles = {
     marginBottom: '0.2rem',
     background: 'none',
     transition: 'background 0.2s',
+  },
+  selectedItem: {
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
   },
 };
 
