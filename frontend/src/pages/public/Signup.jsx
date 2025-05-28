@@ -281,7 +281,7 @@ const Signup = () => {
             }
           </div>
           <ReCAPTCHA
-             sitekey="6LeSNyArAAAAAOP9Q5b5483PhaEGTKlwYsWalyIJ"
+             sitekey="6LcnNEwrAAAAANhCCkwhcJa34KUld10TW2Nlkpon"
              onChange={(token) => setRecaptchaToken(token)}
           />
           {recaptchaError && <div style={styles.fieldError}>{recaptchaError}</div>}
