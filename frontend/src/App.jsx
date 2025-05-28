@@ -10,7 +10,7 @@ import Signup from './pages/public/Signup';
 import Login from './pages/public/Login';
 import SendResetLinkPage from './pages/public/SendResetLinkPage';
 import LockedOutPage from './pages/public/LockedOutPage';
-import Chat from './pages/public/chat';
+import Chat from './pages/public/Chat';
 
 // Sign up flow:
 import ConfirmEmail from './pages/private/Sign-up/ConfirmEmailPage';
