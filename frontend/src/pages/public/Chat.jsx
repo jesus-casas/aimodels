@@ -194,7 +194,7 @@ const Chat = () => {
         chat_id: selectedChat,
         role: 'user',
         content: input,
-        model: selectedModel.label
+        model: selectedModel.label.toLowerCase()
       });
       setMessages(prev => [
         ...prev,
