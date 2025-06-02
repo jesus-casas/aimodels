@@ -5,9 +5,7 @@ import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon } from 
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
-import deepseekLogo from '../../images/deepseek.svg';
-import qwenColorLogo from '../../images/qwen-color.svg';
-import grokLogo from '../../images/grok.svg';
+
 
 // Icon component using SVG icons
 const Icon = ({ name, style = {}, className = '', onClick }) => {
@@ -173,6 +171,7 @@ const Chat = () => {
     }
   }, [isLoading]);
 
+  // func: send message to the server 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || !selectedChat) return;

@@ -1,10 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query } = require('../config/db');
-const { callGpt4o } = require('../models/gpt-4o');
-const { callO3 } = require('../models/o3');
-const { callO4Mini } = require('../models/o4-mini');
-const { callO4MiniHigh } = require('../models/o4-mini-high');
+const { callOpenAIChat, SUPPORTED_MODELS } = require('../models/openai-models');
 
 // Create a new temp chat
 router.post('/chats', async (req, res) => {
@@ -74,21 +71,13 @@ router.get('/messages/:chat_id', async (req, res) => {
 });
 
 // Multi-turn chat completion for anonymous users
-const modelMap = {
-  'gpt-4o': callGpt4o,
-  'o3': callO3,
-  'o4-mini': callO4Mini,
-  'o4-mini-high': callO4MiniHigh,
-};
-
 // POST /complete: Save user message, call OpenAI with full history, save assistant response
 router.post('/complete', async (req, res) => {
   const { chat_id, role, content, model } = req.body;
   if (!chat_id || !role || !content || !model) {
     return res.status(400).json({ error: 'chat_id, role, content, and model are required' });
   }
-  const modelFn = modelMap[model];
-  if (!modelFn) {
+  if (!SUPPORTED_MODELS.includes(model)) {
     return res.status(400).json({ error: 'Unsupported model.' });
   }
   try {
@@ -109,7 +98,7 @@ router.post('/complete', async (req, res) => {
     );
 
     // 3. Call OpenAI API with full history
-    const openaiResult = await modelFn(messages);
+    const openaiResult = await callOpenAIChat(model, messages);
     const aiContent = openaiResult.choices[0].message.content;
 
     // 4. Save assistant response
