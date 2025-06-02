@@ -1,11 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import folderImg from '../../images/folder.png';
-import editImg from '../../images/edit.png';
-import sidebarImg from '../../images/sidebar.png';
-import interfaceImg from '../../images/interface.png';
-import arrowDownImg from '../../images/arrow-down.png';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -13,42 +9,89 @@ import deepseekLogo from '../../images/deepseek.svg';
 import qwenColorLogo from '../../images/qwen-color.svg';
 import grokLogo from '../../images/grok.svg';
 
-// Icon component using imported images
+// Icon component using SVG icons
 const Icon = ({ name, style = {}, className = '', onClick }) => {
   switch (name) {
     case 'folder':
-      return <img src={folderImg} alt="folder" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
+      return <FolderIcon style={style} className={className} onClick={onClick} />;
     case 'edit':
-      return <img src={editImg} alt="edit" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
+      return <EditIcon style={style} className={className} onClick={onClick} />;
     case 'sidebar':
-      return <img src={sidebarImg} alt="sidebar" style={{ width: 25, height: 25, ...style }} className={className} onClick={onClick} />;
+      return <SidebarIcon style={style} className={className} onClick={onClick} />;
     case 'interface':
-      return <img src={interfaceImg} alt="interface" style={{ width: 28, height: 28, ...style }} className={className} onClick={onClick} />;
+      return <InterfaceIcon style={style} className={className} onClick={onClick} />;
     case 'arrow-down':
-      return <img src={arrowDownImg} alt="arrow down" style={{ width: 18, height: 18, ...style }} className={className} onClick={onClick} />;
+      return <ArrowDownIcon style={style} className={className} onClick={onClick} />;
     default:
       return null;
   }
 };
 
 const modelOptions = [
-  { label: 'GPT-4o', desc: 'Great for most tasks', img: openaiLogo },
-  { label: 'o3', desc: 'Uses advanced reasoning', img: openaiLogo },
-  { label: 'o4-mini', desc: 'Fastest at advanced reasoning', img: openaiLogo },
-  { label: 'o4-mini-high', desc: 'Great at coding and visual reasoning', img: openaiLogo },
-  { label: 'Qwen', desc: 'Alibaba Qwen Model', img: qwenColorLogo },
-  { label: 'Meta', desc: 'Meta AI Model', img: 'https://web.lmarena.ai/images/models/meta.svg' },
-  { label: 'Gemini-2.5-Pro-Preview-05-06', desc: 'Google Proprietary', img: googleLogo },
-  { label: 'Claude 3.7 Sonnet (20250219)', desc: 'Anthropic Proprietary', img: anthropicLogo },
-  { label: 'Gemini-2.5-Flash-Preview-05-20', desc: 'Google Proprietary', img: googleLogo },
-  { label: 'GPT-4.1-2025-04-14', desc: 'OpenAI Proprietary', img: openaiLogo },
-  { label: 'Claude 3.5 Sonnet (20241022)', desc: 'Anthropic Proprietary', img: anthropicLogo },
-  { label: 'o3-2025-04-16', desc: 'OpenAI Proprietary', img: openaiLogo },
-  { label: 'GPT-4.1-mini-2025-04-14', desc: 'OpenAI Proprietary', img: openaiLogo },
-  { label: 'DeepSeek-V3-0324', desc: 'DeepSeek MIT', img: deepseekLogo },
-  { label: 'DeepSeek-R1', desc: 'DeepSeek MIT', img: deepseekLogo },
-  { label: 'Qwen3-235B-A22B', desc: 'Alibaba Qwen Model', img: qwenColorLogo },
-  { label: 'Grok', desc: 'xAI Grok Model', img: grokLogo },
+  // OpenAI Models
+  { 
+    label: 'chatgpt-4o-latest', 
+    model: 'GPT-4o', 
+    desc: 'Fast, intelligent, flexible GPT model', 
+    img: openaiLogo 
+  },
+  { 
+    label: 'o3-2025-04-16', 
+    model: 'o3', 
+    desc: 'Most powerful reasoning model', 
+    img: openaiLogo 
+  },
+  { 
+    label: 'gpt-4.5-preview-2025-02-27', 
+    model: 'GPT-4.5', 
+    desc: 'Largest and most capable GPT model', 
+    img: openaiLogo 
+  },
+  { 
+    label: 'gpt-4.1-2025-04-14', 
+    model: 'GPT-4.1', 
+    desc: 'Flagship GPT model for complex tasks', 
+    img: openaiLogo 
+  },
+  { 
+    label: 'o4-mini-2025-04-16', 
+    model: 'o4-mini', 
+    desc: 'Faster, more affordable reasoning model', 
+    img: openaiLogo 
+  },
+  { 
+    label: 'o1-2024-12-17', 
+    model: 'o1', 
+    desc: 'Previous full o-series reasoning model', 
+    img: openaiLogo 
+  },
+  // Google Models
+  { 
+    label: 'gemini-2.5-pro-preview-05-06', 
+    model: 'Gemini Pro', 
+    desc: 'Thinking, reasoning, multimodal, coding', 
+    img: googleLogo 
+  },
+  { 
+    label: 'gemini-2.5-flash-preview-05-20', 
+    model: 'Gemini Flash', 
+    desc: 'Adaptive thinking, cost efficiency', 
+    img: googleLogo 
+  },
+  // Anthropic Models
+  { 
+    label: 'claude-3-7-sonnet-20250219', 
+    model: 'Claude 3.7', 
+    desc: 'Anthropic Proprietary', 
+    img: anthropicLogo 
+  },
+  // DeepSeek Models
+  // { label: 'DeepSeek-V3-0324', model: 'DeepSeek V3', desc: 'DeepSeek MIT', img: deepseekLogo },
+  // { label: 'DeepSeek-R1', model: 'DeepSeek R1', desc: 'DeepSeek MIT', img: deepseekLogo },
+  // Qwen Models
+  // { label: 'Qwen3-235B-A22B', model: 'Qwen 3', desc: 'Alibaba Qwen Model', img: qwenColorLogo },
+  // xAI Models
+  //{ label: 'Grok', model: 'Grok', desc: 'xAI Grok Model', img: grokLogo },
 ];
 
 const Chat = () => {
@@ -256,11 +299,15 @@ const Chat = () => {
                   tabIndex={0}
                 >
                   {/* Model Dropdown */}
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
                     {selectedModel.img && (
-                      <img src={selectedModel.img} alt={selectedModel.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
+                      <img
+                        src={selectedModel.img}
+                        alt={selectedModel.model}
+                        style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }}
+                      />
                     )}
-                    <span style={styles.modelLabel}>{selectedModel.label}</span>
+                    <span style={styles.modelLabel}>{selectedModel.model}</span>
                   </div>
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
@@ -272,18 +319,25 @@ const Chat = () => {
                         style={{
                           ...styles.dropdownItem,
                           ...(selectedModel.label === option.label ? styles.dropdownSelected : {}),
-                          display: 'flex', alignItems: 'center'
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          padding: '0.8rem 1.2rem'
                         }}
                         onClick={() => {
                           setSelectedModel(option);
                           setShowDropdown(false);
                         }}
                       >
-                        {option.img && (
-                          <img src={option.img} alt={option.label} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
-                        )}
-                        <span style={{ verticalAlign: 'middle' }}>{option.label}</span>
-                        <div style={{ fontSize: '0.85em', color: '#66666', marginLeft: 8 }}>{option.desc}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                          {option.img && (
+                            <img src={option.img} alt={option.model} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
+                          )}
+                          <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
+                          <span style={{ fontSize: '0.75rem', color: '#666', marginBottom: 2 }}>{option.label}</span>
+                          <span style={{ fontSize: '0.85rem', color: '#666' }}>{option.desc}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -418,6 +472,13 @@ const styles = {
   },
   modelLabel: {
     flex: 1,
+    fontSize: '1.1rem',
+    fontWeight: 600,
+    color: '#222',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '200px'
   },
   dropdownArrow: {
     fontSize: '0.5rem',
