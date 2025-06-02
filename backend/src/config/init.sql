@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     token TEXT NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+); 
 
 -- Permanent user chats
 CREATE TABLE IF NOT EXISTS user_chats (
