@@ -253,6 +253,15 @@ export const tempChatAPI = {
     return handleResponse(response);
   },
 
+  // Delete a chat and its messages
+  deleteChat: async (chat_id) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/chats/${chat_id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return handleResponse(response);
+  },
+
   // Multi-turn chat completion for anonymous users
   completeChat: async ({ chat_id, role, content, model }) => {
     const response = await fetch(`${API_BASE_URL}/tempchat/complete`, {

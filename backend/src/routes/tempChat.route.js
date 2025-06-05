@@ -118,4 +118,18 @@ router.post('/complete', async (req, res) => {
   }
 });
 
+// Delete a chat and its messages
+router.delete('/chats/:chat_id', async (req, res) => {
+  const { chat_id } = req.params;
+  try {
+    // Delete messages first (due to foreign key constraint)
+    await query('DELETE FROM temp_chat_messages WHERE chat_id = $1', [chat_id]);
+    // Then delete the chat
+    await query('DELETE FROM temp_chats WHERE id = $1', [chat_id]);
+    res.json({ message: 'Chat deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router; 

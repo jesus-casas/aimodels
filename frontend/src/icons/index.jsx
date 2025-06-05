@@ -90,4 +90,20 @@ export const ArrowDownIcon = ({ style = {}, className = '', onClick }) => (
       c-5.857-5.857-15.355-5.858-21.213,0.001c-5.858,5.858-5.858,15.355,0,21.213l150.004,150c2.813,2.813,6.628,4.393,10.606,4.393
       s7.794-1.581,10.606-4.394l149.996-150C331.465,94.749,331.465,85.251,325.607,79.393z"/>
   </svg>
+);
+
+export const DeleteIcon = ({ style = {}, className = '', onClick }) => (
+  <svg
+    id="Layer_3"
+    height="512"
+    viewBox="0 0 32 32"
+    width="512"
+    xmlns="http://www.w3.org/2000/svg"
+    data-name="Layer 3"
+    style={{ width: 16, height: 16, ...style }}
+    className={className}
+    onClick={onClick}
+  >
+    <path d="m17.414 16 6.293-6.293a1 1 0 0 0 -1.414-1.414l-6.293 6.293-6.293-6.293a1 1 0 0 0 -1.414 1.414l6.293 6.293-6.293 6.293a1 1 0 1 0 1.414 1.414l6.293-6.293 6.293 6.293a1 1 0 0 0 1.414-1.414z" />
+  </svg>
 ); 

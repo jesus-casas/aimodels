@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon } from '../../icons';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -20,6 +20,8 @@ const Icon = ({ name, style = {}, className = '', onClick }) => {
       return <InterfaceIcon style={style} className={className} onClick={onClick} />;
     case 'arrow-down':
       return <ArrowDownIcon style={style} className={className} onClick={onClick} />;
+    case 'delete':
+      return <DeleteIcon style={style} className={className} onClick={onClick} />;
     default:
       return null;
   }
@@ -215,11 +217,24 @@ const Chat = () => {
     const sessionId = getSessionId();
     try {
       const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
-      setChatHistory(prev => [...prev, newChat]);
+      setChatHistory(prev => [newChat, ...prev]);
       setSelectedChat(newChat.id);
       setMessages([]);
     } catch (error) {
       console.error('Failed to create new chat:', error);
+    }
+  };
+
+  const handleDeleteChat = async (chatId) => {
+    try {
+      await tempChatAPI.deleteChat(chatId);
+      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+      if (selectedChat === chatId) {
+        setSelectedChat(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
     }
   };
 
@@ -247,19 +262,29 @@ const Chat = () => {
           </div>
           <div style={styles.chatHistorySection}>
             <div style={styles.chatsTitle}>Chats</div>
-            {chatHistory
-              .map(chat => (
-                <div
-                  key={chat.id}
-                  style={{
-                    ...styles.chatItem,
-                    ...(selectedChat === chat.id && styles.selectedItem)
-                  }}
-                  onClick={() => setSelectedChat(chat.id)}
-                >
+            {chatHistory.map(chat => (
+              <div
+                key={chat.id}
+                style={{
+                  ...styles.chatItem,
+                  ...(selectedChat === chat.id && styles.selectedItem),
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div onClick={() => setSelectedChat(chat.id)} style={{ flex: 1 }}>
                   {chat.title}
                 </div>
-              ))}
+                {selectedChat === chat.id && (
+                  <Icon
+                    name="delete"
+                    style={{ cursor: 'pointer', marginLeft: 8 }}
+                    onClick={() => handleDeleteChat(chat.id)}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
