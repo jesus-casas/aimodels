@@ -271,4 +271,17 @@ export const tempChatAPI = {
     });
     return handleResponse(response);
   },
+
+  // Multi-turn chat completion for anonymous users (streaming)
+  completeChatStream: async ({ chat_id, role, content, model }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/complete/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id, role, content, model: model.toLowerCase() })
+    });
+    if (!response.ok) {
+      throw new Error('Streaming request failed');
+    }
+    return response.body.getReader(); // Return the ReadableStreamDefaultReader
+  },
 }; 

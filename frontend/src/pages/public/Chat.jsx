@@ -118,26 +118,32 @@ const Chat = () => {
     return sessionId;
   };
 
-  // Load chat history on mount
-  useEffect(() => {
-    const loadChats = async () => {
-      const sessionId = getSessionId();
-      try {
-        const chats = await tempChatAPI.getChats(sessionId);
-        setChatHistory(chats);
-        if (chats.length > 0) {
+  // Load chat history on mount and expose as a function
+  const loadChats = async (selectLatest = false) => {
+    const sessionId = getSessionId();
+    try {
+      const chats = await tempChatAPI.getChats(sessionId);
+      setChatHistory(chats);
+      if (chats.length > 0) {
+        if (selectLatest) {
           setSelectedChat(chats[0].id);
-        } else {
-          // If no chats exist, create a new one
-          const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
-          setChatHistory([newChat]);
-          setSelectedChat(newChat.id);
+        } else if (!selectedChat || !chats.some(c => c.id === selectedChat)) {
+          setSelectedChat(chats[0].id);
         }
-      } catch (error) {
-        console.error('Failed to load chat history:', error);
+      } else {
+        // No chats exist, auto-create a new chat
+        const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
+        setChatHistory([newChat]);
+        setSelectedChat(newChat.id);
       }
-    };
+    } catch (error) {
+      console.error('Failed to load chat history:', error);
+    }
+  };
+
+  useEffect(() => {
     loadChats();
+    // eslint-disable-next-line
   }, []);
 
   // Load messages when a chat is selected
@@ -189,36 +195,125 @@ const Chat = () => {
     setInput('');
     setIsLoading(true);
 
-    try {
-      // Call the multi-turn chat completion endpoint
-      const aiResponse = await tempChatAPI.completeChat({
-        chat_id: selectedChat,
-        role: 'user',
-        content: input,
-        model: selectedModel.label.toLowerCase()
-      });
+    // Supported models for streaming (all current OpenAI models)
+    const streamingModels = [
+      'chatgpt-4o-latest',
+      'o3-2025-04-16',
+      'gpt-4.5-preview-2025-02-27',
+      'gpt-4.1-2025-04-14',
+      'o4-mini-2025-04-16',
+      'o1-2024-12-17',
+    ];
+    const isStreaming = streamingModels.includes(selectedModel.label.toLowerCase());
+
+    if (isStreaming) {
+      // Streaming implementation
+      let aiMessageId = Date.now() + 1;
       setMessages(prev => [
         ...prev,
         {
-          id: Date.now() + 1,
-          content: aiResponse.content,
+          id: aiMessageId,
+          content: '',
           role: 'assistant',
           timestamp: new Date().toISOString()
         }
       ]);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      setIsLoading(false);
+      try {
+        const reader = await tempChatAPI.completeChatStream({
+          chat_id: selectedChat,
+          role: 'user',
+          content: input,
+          model: selectedModel.label.toLowerCase()
+        });
+        let aiContent = '';
+        let done = false;
+        while (!done) {
+          const { value, done: streamDone } = await reader.read();
+          if (streamDone) break;
+          const chunk = new TextDecoder().decode(value);
+          // SSE: data: { ... }\n\n
+          chunk.split(/\n\n/).forEach(line => {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.replace('data: ', ''));
+              if (data.delta) {
+                aiContent += data.delta;
+                setMessages(prevMsgs => prevMsgs.map(m =>
+                  m.id === aiMessageId ? { ...m, content: aiContent } : m
+                ));
+              }
+              if (data.done) {
+                done = true;
+              }
+              if (data.error) {
+                setMessages(prevMsgs => prevMsgs.map(m =>
+                  m.id === aiMessageId ? { ...m, content: '[Error: ' + data.error + ']' } : m
+                ));
+                done = true;
+              }
+            }
+          });
+        }
+        setIsLoading(false);
+        await loadChats();
+      } catch (error) {
+        setIsLoading(false);
+        setMessages(prevMsgs => prevMsgs.map(m =>
+          m.id === aiMessageId ? { ...m, content: '[Streaming error]' } : m
+        ));
+      }
+    } else {
+      // Fallback to non-streaming
+      try {
+        const aiResponse = await tempChatAPI.completeChat({
+          chat_id: selectedChat,
+          role: 'user',
+          content: input,
+          model: selectedModel.label.toLowerCase()
+        });
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            content: aiResponse.content,
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        setIsLoading(false);
+        await loadChats();
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        setIsLoading(false);
+      }
     }
   };
 
   const handleNewChat = async () => {
     const sessionId = getSessionId();
+    // Prevent multiple 'New Chat' chats: check if one exists with no messages
+    const existingNewChat = chatHistory.find(
+      chat => chat.title === 'New Chat'
+    );
+    if (existingNewChat) {
+      // Optionally, check if it has no messages
+      try {
+        const msgs = await tempChatAPI.getMessages(existingNewChat.id);
+        if (msgs.length === 0) {
+          setSelectedChat(existingNewChat.id);
+          setMessages([]);
+          return;
+        }
+      } catch (error) {
+        // fallback: just select it
+        setSelectedChat(existingNewChat.id);
+        setMessages([]);
+        return;
+      }
+    }
     try {
       const newChat = await tempChatAPI.createChat({ session_id: sessionId, title: 'New Chat' });
-      setChatHistory(prev => [newChat, ...prev]);
-      setSelectedChat(newChat.id);
+      // Re-fetch chat list and select the new chat
+      await loadChats(true);
       setMessages([]);
     } catch (error) {
       console.error('Failed to create new chat:', error);
@@ -228,15 +323,32 @@ const Chat = () => {
   const handleDeleteChat = async (chatId) => {
     try {
       await tempChatAPI.deleteChat(chatId);
-      setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-      if (selectedChat === chatId) {
-        setSelectedChat(null);
-        setMessages([]);
-      }
+      // Re-fetch chat list and update selected chat
+      await loadChats();
+      setMessages([]);
     } catch (error) {
       console.error('Failed to delete chat:', error);
     }
   };
+
+  useEffect(() => {
+    const handleUnload = async () => {
+      const sessionId = localStorage.getItem('anonymous_session_id');
+      if (sessionId) {
+        // Use navigator.sendBeacon for reliability on unload
+        navigator.sendBeacon(
+          `${process.env.NODE_ENV === 'development'
+            ? 'http://localhost:3001/api'
+            : 'https://auth-backend-7pl7.onrender.com/api'
+          }/tempchat/chats/session/${sessionId}`
+        );
+        // Optionally clear session id
+        localStorage.removeItem('anonymous_session_id');
+      }
+    };
+    window.addEventListener('unload', handleUnload);
+    return () => window.removeEventListener('unload', handleUnload);
+  }, []);
 
   return (
     <div style={styles.container}>
@@ -273,8 +385,19 @@ const Chat = () => {
                   alignItems: 'center'
                 }}
               >
-                <div onClick={() => setSelectedChat(chat.id)} style={{ flex: 1 }}>
-                  {chat.title}
+                <div
+                  onClick={() => setSelectedChat(chat.id)}
+                  style={{
+                    flex: 1,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {chat.title.replace(/^"(.+)"$/, '$1')}
                 </div>
                 {selectedChat === chat.id && (
                   <Icon

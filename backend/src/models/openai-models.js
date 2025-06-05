@@ -12,6 +12,7 @@ const SUPPORTED_MODELS = [
   'gpt-4.1-2025-04-14',
   'o4-mini-2025-04-16',
   'o1-2024-12-17',
+  'gpt-4o-mini',
   // Add more as needed
 ];
 
