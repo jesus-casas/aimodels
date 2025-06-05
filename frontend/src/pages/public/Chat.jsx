@@ -107,6 +107,7 @@ const Chat = () => {
   const { user } = useAuthStore();
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [dropdownHover, setDropdownHover] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Get or generate a session_id for anonymous users
   const getSessionId = () => {
@@ -178,6 +179,21 @@ const Chat = () => {
       setTimeout(() => setInterfaceFade(false), 400); // fade out after loading
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   // func: send message to the server 
   const handleSendMessage = async (e) => {
@@ -459,7 +475,7 @@ const Chat = () => {
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
                 {showDropdown && (
-                  <div style={styles.dropdownMenu}>
+                  <div ref={dropdownRef} style={styles.dropdownMenu}>
                     {modelOptions.map((option, idx) => (
                       <div
                         key={option.label}
