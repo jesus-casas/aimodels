@@ -408,8 +408,45 @@ const Chat = () => {
 
   const isFirstUserMessage = messages.length > 0 && messages[0].role === 'user';
 
+  // Inject mobile-specific styles
+  useEffect(() => {
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `
+      @media (max-width: 600px) {
+        .chat-container {
+          flex-direction: column !important;
+          height: 100dvh !important;
+          width: 100vw !important;
+        }
+        .center-column {
+          width: 100% !important;
+          max-width: 100vw !important;
+          min-width: 0 !important;
+          padding: 0 0.5rem !important;
+        }
+        .input-form {
+          position: fixed !important;
+          bottom: 0;
+          left: 0;
+          width: 100vw !important;
+          padding: 0.5rem 0.5rem !important;
+          border-radius: 0 !important;
+          z-index: 100;
+        }
+        .messages-container {
+          padding: 1rem 0 4.5rem 0 !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 7rem) !important;
+          overflow-y: auto !important;
+        }
+      }
+    `;
+    document.head.appendChild(styleTag);
+    return () => { document.head.removeChild(styleTag); };
+  }, []);
+
   return (
-    <div style={styles.container}>
+    <div className="chat-container" style={styles.container}>
       {/* Sidebar */}
       {sidebarVisible && (
         <div style={styles.sidebar}>
@@ -560,7 +597,7 @@ const Chat = () => {
         </div>
         {/* Chat Window */}
         <div style={styles.chatArea}>
-          <div style={styles.centerColumn}>
+          <div className="center-column" style={styles.centerColumn}>
             {messages.length === 0 && !isLoading ? (
               <div style={styles.emptyState}>
                 <div style={styles.emptyTitle}>Ready when you are.</div>
@@ -568,6 +605,7 @@ const Chat = () => {
               </div>
             ) : (
               <div
+                className="messages-container"
                 style={{
                   ...styles.messagesContainer,
                   ...(isFirstUserMessage ? { paddingTop: '12rem' } : {})
@@ -747,7 +785,7 @@ const Chat = () => {
           </div>
         </div>
         {/* Input Bar */}
-        <form style={styles.inputForm} onSubmit={handleSendMessage}>
+        <form className="input-form" style={styles.inputForm} onSubmit={handleSendMessage}>
           <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
             <input
               type="text"
