@@ -216,16 +216,19 @@ const Chat = () => {
       // Set a timeout to remove the border after scrolling stops
       scrollTimeout.current = setTimeout(() => {
         setIsScrolling(false);
-      }, 500); // Increased from 150ms to 500ms for smoother transition
+      }, 500);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current);
-      }
-    };
+    const messagesContainer = document.querySelector('[style*="messagesContainer"]');
+    if (messagesContainer) {
+      messagesContainer.addEventListener('scroll', handleScroll);
+      return () => {
+        messagesContainer.removeEventListener('scroll', handleScroll);
+        if (scrollTimeout.current) {
+          clearTimeout(scrollTimeout.current);
+        }
+      };
+    }
   }, []);
 
   // func: send message to the server 
