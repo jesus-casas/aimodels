@@ -5,6 +5,13 @@ import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, Delete
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 
 // Icon component using SVG icons
@@ -105,8 +112,11 @@ const Chat = () => {
   const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
-  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
   const [dropdownHover, setDropdownHover] = useState(false);
+  const dropdownRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef(null);
 
   // Get or generate a session_id for anonymous users
   const getSessionId = () => {
@@ -178,6 +188,45 @@ const Chat = () => {
       setTimeout(() => setInterfaceFade(false), 400); // fade out after loading
     }
   }, [isLoading]);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolling(true);
+      
+      // Clear any existing timeout
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+      
+      // Set a timeout to remove the border after scrolling stops
+      scrollTimeout.current = setTimeout(() => {
+        setIsScrolling(false);
+      }, 500); // Increased from 150ms to 500ms for smoother transition
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, []);
 
   // func: send message to the server 
   const handleSendMessage = async (e) => {
@@ -350,6 +399,8 @@ const Chat = () => {
     return () => window.removeEventListener('unload', handleUnload);
   }, []);
 
+  const isFirstUserMessage = messages.length > 0 && messages[0].role === 'user';
+
   return (
     <div style={styles.container}>
       {/* Sidebar */}
@@ -414,7 +465,12 @@ const Chat = () => {
       {/* Main Chat Area */}
       <div style={styles.mainArea}>
         {/* Header with model dropdown */}
-        <div style={styles.header}>
+        <div
+          style={{
+            ...styles.header,
+            borderBottom: isScrolling ? '1px solid #e0e0e0' : 'none'
+          }}
+        >
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -459,7 +515,7 @@ const Chat = () => {
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
                 {showDropdown && (
-                  <div style={styles.dropdownMenu}>
+                  <div ref={dropdownRef} style={styles.dropdownMenu}>
                     {modelOptions.map((option, idx) => (
                       <div
                         key={option.label}
@@ -482,8 +538,8 @@ const Chat = () => {
                           <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
-                          <span style={{ fontSize: '0.75rem', color: '#666', marginBottom: 2 }}>{option.label}</span>
-                          <span style={{ fontSize: '0.85rem', color: '#666' }}>{option.desc}</span>
+                          <span style={{ fontSize: '0.75rem', color: '#666666', marginBottom: 2 }}>{option.label}</span>
+                          <span style={{ fontSize: '0.85rem', color: '#666666' }}>{option.desc}</span>
                         </div>
                       </div>
                     ))}
@@ -495,32 +551,191 @@ const Chat = () => {
         </div>
         {/* Chat Window */}
         <div style={styles.chatArea}>
-          {messages.length === 0 && !isLoading ? (
-            <div style={styles.emptyState}>
-              <div style={styles.emptyTitle}>Ready when you are.</div>
-              <div style={styles.emptySubtitle}>Start a conversation with today's highest performing AI models.</div>
-            </div>
-          ) : (
-            <div style={styles.messagesContainer}>
-              {messages.map(message => (
-                <div
-                  key={message.id}
-                  style={{
-                    ...styles.message,
-                    ...(message.role === 'user' ? styles.userMessage : styles.aiMessage)
-                  }}
-                >
-                  <div style={styles.messageContent}>{message.content}</div>
-                </div>
-              ))}
-              {isLoading && (
-                <div style={styles.loadingMessage}>
-                  <Icon name="interface" className={interfaceFade ? 'fade-in-out' : ''} style={styles.interfaceIcon} />
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
+          <div style={styles.centerColumn}>
+            {messages.length === 0 && !isLoading ? (
+              <div style={styles.emptyState}>
+                <div style={styles.emptyTitle}>Ready when you are.</div>
+                <div style={styles.emptySubtitle}>Start a conversation with today's highest performing AI models.</div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  ...styles.messagesContainer,
+                  ...(isFirstUserMessage ? { paddingTop: '12rem' } : {})
+                }}
+              >
+                {messages.map((message, idx) => (
+                  <div
+                    key={message.id}
+                    style={{
+                      ...styles.message,
+                      ...(message.role === 'user' ? styles.userMessage : styles.aiMessage),
+                      ...(message.role === 'user' && idx === 0 ? styles.firstUserMessage : {}),
+                    }}
+                  >
+                    <div style={styles.messageContent}>
+                      {message.role === 'assistant' ? (
+                        <ReactMarkdown
+                          children={message.content}
+                          remarkPlugins={[remarkGfm, remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                          components={{
+                            code({node, inline, className, children, ...props}) {
+                              return !inline ? (
+                                <SyntaxHighlighter style={oneLight} language={className?.replace('language-', '')}>
+                                  {String(children).replace(/\n$/, '')}
+                                </SyntaxHighlighter>
+                              ) : (
+                                <code style={{background: '#eee', borderRadius: 4, padding: '2px 4px'}} {...props}>{children}</code>
+                              );
+                            },
+                            hr() {
+                              return (
+                                <hr
+                                  style={{
+                                    border: 'none',
+                                    borderTop: '1.5px solid #e0e0e0',
+                                    borderRadius: '2px',
+                                    margin: '2.5rem 0',
+                                    width: '80%',
+                                  }}
+                                />
+                              );
+                            },
+                            ul({children, ...props}) {
+                              return <ul style={styles.markdownList} {...props}>{children}</ul>;
+                            },
+                            ol({children, ...props}) {
+                              return <ol style={styles.markdownList} {...props}>{children}</ol>;
+                            },
+                            li({children, ...props}) {
+                              return <li style={styles.markdownListItem} {...props}>{children}</li>;
+                            },
+                            table({children, ...props}) {
+                              return (
+                                <div style={{ 
+                                  overflowX: 'auto', 
+                                  margin: '1rem 0',
+                                  width: '100%',
+                                  borderRadius: '8px',
+                                  border: '1px solid #e0e0e0'
+                                }}>
+                                  <table style={{ 
+                                    borderCollapse: 'collapse', 
+                                    width: '100%',
+                                    fontSize: '0.95rem',
+                                    lineHeight: 1.5
+                                  }} {...props}>
+                                    {children}
+                                  </table>
+                                </div>
+                              );
+                            },
+                            th({children, ...props}) {
+                              return (
+                                <th style={{ 
+                                  border: '1px solid #e0e0e0', 
+                                  padding: '0.75rem 1rem',
+                                  background: '#f5f5f5',
+                                  fontWeight: 600,
+                                  textAlign: 'left',
+                                  color: '#333'
+                                }} {...props}>
+                                  {children}
+                                </th>
+                              );
+                            },
+                            td({children, ...props}) {
+                              return (
+                                <td style={{ 
+                                  border: '1px solid #e0e0e0', 
+                                  padding: '0.75rem 1rem',
+                                  color: '#333'
+                                }} {...props}>
+                                  {children}
+                                </td>
+                              );
+                            },
+                            blockquote({children, ...props}) {
+                              return (
+                                <blockquote style={{
+                                  borderLeft: '4px solid #1976d2',
+                                  background: '#f7fafd',
+                                  margin: '1.5em 0',
+                                  padding: '0.8em 1.2em',
+                                  color: '#333',
+                                  fontStyle: 'italic',
+                                  borderRadius: '6px',
+                                }} {...props}>
+                                  {children}
+                                </blockquote>
+                              );
+                            },
+                            img({src, alt, ...props}) {
+                              return (
+                                <img
+                                  src={src}
+                                  alt={alt}
+                                  style={{
+                                    maxWidth: '100%',
+                                    height: 'auto',
+                                    display: 'block',
+                                    margin: '1.2em auto',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                                  }}
+                                  {...props}
+                                />
+                              );
+                            },
+                            a({href, children, ...props}) {
+                              return (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    color: '#1976d2',
+                                    textDecoration: 'underline',
+                                    wordBreak: 'break-all',
+                                    cursor: 'pointer',
+                                  }}
+                                  {...props}
+                                >
+                                  {children}
+                                </a>
+                              );
+                            },
+                            h1({children, ...props}) {
+                              return <h1 style={{ fontSize: '2.2rem', fontWeight: 700, margin: '1.2em 0 0.7em 0', color: '#222' }} {...props}>{children}</h1>;
+                            },
+                            h2({children, ...props}) {
+                              return <h2 style={{ fontSize: '1.7rem', fontWeight: 600, margin: '1.1em 0 0.6em 0', color: '#222' }} {...props}>{children}</h2>;
+                            },
+                            h3({children, ...props}) {
+                              return <h3 style={{ fontSize: '1.3rem', fontWeight: 600, margin: '1em 0 0.5em 0', color: '#222' }} {...props}>{children}</h3>;
+                            },
+                            h4({children, ...props}) {
+                              return <h4 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0.9em 0 0.4em 0', color: '#222' }} {...props}>{children}</h4>;
+                            },
+                            h5({children, ...props}) {
+                              return <h5 style={{ fontSize: '1rem', fontWeight: 600, margin: '0.8em 0 0.3em 0', color: '#222' }} {...props}>{children}</h5>;
+                            },
+                            h6({children, ...props}) {
+                              return <h6 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0.7em 0 0.2em 0', color: '#222' }} {...props}>{children}</h6>;
+                            },
+                          }}
+                        />
+                      ) : (
+                        message.content
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
         </div>
         {/* Input Bar */}
         <form style={styles.inputForm} onSubmit={handleSendMessage}>
@@ -546,7 +761,7 @@ const styles = {
   container: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
     fontFamily: 'Inter, Arial, sans-serif',
   },
   sidebar: {
@@ -593,7 +808,6 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottom: '1px solid #e0e0e0',
     background: '#fff',
     position: 'relative',
     zIndex: 2,
@@ -658,9 +872,12 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
     position: 'relative',
     minHeight: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
   },
   emptyState: {
     flex: 1,
@@ -687,55 +904,48 @@ const styles = {
   },
   messagesContainer: {
     flex: 1,
-    overflowY: 'auto',
     padding: '2rem 0',
     display: 'flex',
     flexDirection: 'column',
     gap: '1.2rem',
     minHeight: 0,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    height: '100%',
+    overflowY: 'auto',
   },
   message: {
-    maxWidth: '60%',
+    maxWidth: '900px',
+    width: 'auto',
     padding: '0.5rem 1rem',
     borderRadius: '24px',
     fontSize: '1rem',
-    marginLeft: '1.5rem',
-    marginRight: '1.5rem',
+    wordBreak: 'break-word',
   },
   userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#4A90E2',
-    color: 'white',
-    marginRight: '2.5rem',
+    backgroundColor: '#e0e0e0',
+    color: '#222',
     borderRadius: '24px',
+    boxShadow: 'none',
+    border: 'none',
+    alignSelf: 'flex-end',
+    textAlign: 'left',
   },
   aiMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     color: '#333',
-    border: '1px solid #e0e0e0',
-    marginLeft: '2.5rem',
+    border: 'none',
     borderRadius: '24px',
+    boxShadow: 'none',
+    alignSelf: 'flex-start',
+    lineHeight: 1.8,
+    fontSize: '1.05rem',
+  },
+  firstUserMessage: {
+    marginTop: '3rem',
   },
   messageContent: {
     marginBottom: 0,
-
-  },
-  loadingMessage: {
-    alignSelf: 'flex-start',
-    padding: '1rem',
-    backgroundColor: '#fff',
-    borderRadius: '12px',
-    border: '1px solid #e0e0e0',
-    color: '#666',
-    fontSize: '1.2rem',
-    display: 'flex',
-    alignItems: 'center',
-    minHeight: 40,
-  },
-  interfaceIcon: {
-    animation: 'fadeInOut 1.2s linear infinite',
-    opacity: 0.7,
   },
   inputForm: {
     display: 'flex',
@@ -779,6 +989,24 @@ const styles = {
   selectedItem: {
     backgroundColor: '#e3f2fd',
     color: '#1976d2',
+  },
+  centerColumn: {
+    width: '75%',
+    minWidth: 0,
+    maxWidth: '1000px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    flex: 1,
+    height: '100%',
+  },
+  markdownList: {
+    paddingLeft: '1.5em',
+    margin: '1em 0',
+  },
+  markdownListItem: {
+    marginBottom: '0.5em',
+    lineHeight: 1.7,
   },
 };
 
