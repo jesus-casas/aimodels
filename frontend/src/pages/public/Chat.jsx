@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon } from '../../icons';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -29,6 +29,8 @@ const Icon = ({ name, style = {}, className = '', onClick }) => {
       return <ArrowDownIcon style={style} className={className} onClick={onClick} />;
     case 'delete':
       return <DeleteIcon style={style} className={className} onClick={onClick} />;
+    case 'send':
+      return <SendIcon style={style} className={className} onClick={onClick} />;
     default:
       return null;
   }
@@ -199,8 +201,10 @@ const Chat = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [showDropdown]);
 
@@ -491,13 +495,15 @@ const Chat = () => {
                   onClick={() => setSidebarVisible(true)}
                 />
               )}
-              <div style={{ minWidth: 0 }}>
+              <div style={{ minWidth: 0, position: 'relative', zIndex: 20 }}>
                 <div
                   style={{
                     ...styles.modelDropdown,
                     background: dropdownHover ? '#f0f0f0' : '#fff',
                     border: 'none',
                     boxShadow: dropdownHover ? '0 1px 4px rgba(0,0,0,0.04)' : 'none',
+                    position: 'relative',
+                    zIndex: 21
                   }}
                   onClick={() => setShowDropdown(v => !v)}
                   onMouseEnter={() => setDropdownHover(true)}
@@ -518,7 +524,7 @@ const Chat = () => {
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
                 {showDropdown && (
-                  <div ref={dropdownRef} style={styles.dropdownMenu}>
+                  <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }}>
                     {modelOptions.map((option, idx) => (
                       <div
                         key={option.label}
@@ -742,18 +748,35 @@ const Chat = () => {
         </div>
         {/* Input Bar */}
         <form style={styles.inputForm} onSubmit={handleSendMessage}>
-          {/* TODO: Add a button to add image button chat */}
-          {/* <button type="button" style={styles.inputIconButton} tabIndex={-1}>
-            +
-          </button> */}
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything"
-            style={styles.input}
-            disabled={isLoading}
-          />
+          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask anything"
+              style={styles.input}
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              style={{
+                position: 'absolute',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: input.trim() ? 'pointer' : 'default',
+                opacity: input.trim() ? 1 : 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#000000'
+              }}
+              disabled={!input.trim() || isLoading}
+            >
+              <SendIcon style={{ width: 28, height: 28 }} />
+            </button>
+          </div>
         </form>
       </div>
     </div>
@@ -963,6 +986,7 @@ const styles = {
   input: {
     flex: 1,
     padding: '1rem',
+    paddingRight: '3rem',
     borderRadius: '24px',
     border: '1px solid #e0e0e0',
     fontSize: '1rem',
