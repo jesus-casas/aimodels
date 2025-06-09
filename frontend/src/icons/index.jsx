@@ -141,4 +141,36 @@ export const SendIcon = ({ style = {}, className = '', onClick }) => (
       fillRule="evenodd"
     />
   </svg>
+);
+
+export const CheckIcon = ({ style = {}, className = '', onClick }) => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="#222"
+    xmlns="http://www.w3.org/2000/svg"
+    style={style}
+    className={className}
+    onClick={onClick}
+  >
+    <g>
+      <path d="m9.707 19.121c-.187.188-.442.293-.707.293s-.52-.105-.707-.293l-5.646-5.647c-.586-.586-.586-1.536 0-2.121l.707-.707c.586-.586 1.535-.586 2.121 0l3.525 3.525 9.525-9.525c.586-.586 1.536-.586 2.121 0l.707.707c.586.586.586 1.536 0 2.121z"/>
+    </g>
+  </svg>
+);
+
+export const VerticalDotsIcon = ({ style = {}, className = '', onClick }) => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={style}
+    className={className}
+    onClick={onClick}
+  >
+    <path d="m12 5.25c.4142 0 .75.33579.75.75s-.3358.75-.75.75-.75-.33579-.75-.75.3358-.75.75-.75zm0 6c.4142 0 .75.3358.75.75s-.3358.75-.75.75-.75-.3358-.75-.75.3358-.75.75-.75zm0 6c.4142 0 .75.3358.75.75s-.3358.75-.75.75-.75-.3358-.75-.75.3358-.75.75-.75z" fill="rgb(0,0,0)" stroke="rgb(0,0,0)" stroke-width="1.5"/>
+  </svg>
 ); 
