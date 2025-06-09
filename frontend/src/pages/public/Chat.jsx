@@ -439,6 +439,25 @@ const Chat = () => {
           max-height: calc(100dvh - 7rem) !important;
           overflow-y: auto !important;
         }
+        .message {
+          max-width: 100% !important;
+          font-size: 0.9rem !important;
+          line-height: 1.4 !important;
+          word-break: break-word !important;
+          overflow-wrap: anywhere !important;
+        }
+        .aiMessage {
+          font-size: 0.9rem !important;
+          line-height: 1.4 !important;
+        }
+        .model-dropdown-button {
+          min-width: 120px !important;
+        }
+        .dropdownMenu {
+          min-width: 100vw !important;
+          left: 0 !important;
+          border-radius: 0 !important;
+        }
       }
     `;
     document.head.appendChild(styleTag);
@@ -534,6 +553,7 @@ const Chat = () => {
               )}
               <div style={{ minWidth: 0, position: 'relative', zIndex: 20 }}>
                 <div
+                  className="model-dropdown-button"
                   style={{
                     ...styles.modelDropdown,
                     background: dropdownHover ? '#f0f0f0' : '#fff',
@@ -561,7 +581,7 @@ const Chat = () => {
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
                 {showDropdown && (
-                  <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }}>
+                  <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }} className="dropdownMenu">
                     {modelOptions.map((option, idx) => (
                       <div
                         key={option.label}
@@ -614,6 +634,7 @@ const Chat = () => {
                 {messages.map((message, idx) => (
                   <div
                     key={message.id}
+                    className={`message ${message.role === 'user' ? 'userMessage' : 'aiMessage'}`}
                     style={{
                       ...styles.message,
                       ...(message.role === 'user' ? styles.userMessage : styles.aiMessage),
