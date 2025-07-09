@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon } from '../../icons';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon, CheckIcon, VerticalDotsIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -408,8 +408,119 @@ const Chat = () => {
 
   const isFirstUserMessage = messages.length > 0 && messages[0].role === 'user';
 
+  // Inject mobile-specific styles
+  useEffect(() => {
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `
+      .input-form {
+        width: 75% !important;
+        max-width: 75% !important;
+        margin: 0 auto !important;
+      }
+      @media (max-width: 800px) {
+        .input-form {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          padding: 0.5rem 0.5rem !important;
+        }
+        .center-column {
+          width: 100% !important;
+          max-width: 100vw !important;
+          min-width: 0 !important;
+          padding: 0 0.5rem !important;
+        }
+        .dropdownMenu, .model-dropdown-button + .dropdownMenu {
+          max-width: 95vw !important;
+          width: auto !important;
+          min-width: 180px !important;
+          left: 0 !important;
+          border-radius: 0 !important;
+          box-sizing: border-box !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+      }
+      @media (max-width: 600px) {
+        .chat-container {
+          flex-direction: column !important;
+          height: 100dvh !important;
+          width: 100vw !important;
+        }
+        .center-column {
+          width: 100% !important;
+          max-width: 100vw !important;
+          min-width: 0 !important;
+          padding: 0 0.5rem !important;
+        }
+        .input-form {
+          position: fixed !important;
+          bottom: 0;
+          left: 0;
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0.5rem 0.5rem !important;
+          border-radius: 0 !important;
+          z-index: 100;
+        }
+        .messages-container {
+          padding: 1rem 0 4.5rem 0 !important;
+          min-height: 0 !important;
+          max-height: calc(100dvh - 7rem) !important;
+          overflow-y: auto !important;
+        }
+        .message {
+          max-width: 100% !important;
+          font-size: 0.9rem !important;
+          line-height: 1.4 !important;
+          word-break: break-word !important;
+          overflow-wrap: anywhere !important;
+        }
+        .aiMessage {
+          font-size: 0.9rem !important;
+          line-height: 1.4 !important;
+        }
+        .model-dropdown-button {
+          min-width: 120px !important;
+        }
+        .dropdownMenu, .model-dropdown-button + .dropdownMenu {
+          max-width: 95vw !important;
+          width: auto !important;
+          min-width: 180px !important;
+          left: 0 !important;
+          border-radius: 0 !important;
+          box-sizing: border-box !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+      }
+      .model-dropdown-button,
+      .model-dropdown-button:focus,
+      .model-dropdown-button:active,
+      .model-dropdown-button:focus-visible {
+        outline: none !important;
+        background: #fff !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      .dropdownMenu div[style*='dropdownItem'],
+      .dropdownMenu div[style*='dropdownItem']:focus,
+      .dropdownMenu div[style*='dropdownItem']:active,
+      .dropdownMenu div[style*='dropdownItem']:focus-visible {
+        outline: none !important;
+        background: #fff !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      .model-dropdown-button img,
+      .dropdownMenu img {
+        -webkit-tap-highlight-color: transparent !important;
+      }
+    `;
+    document.head.appendChild(styleTag);
+    return () => { document.head.removeChild(styleTag); };
+  }, []);
+
   return (
-    <div style={styles.container}>
+    <div className="chat-container" style={styles.container}>
       {/* Sidebar */}
       {sidebarVisible && (
         <div style={styles.sidebar}>
@@ -417,7 +528,7 @@ const Chat = () => {
             <div style={styles.sidebarTopRow}>
               <Icon
                 name="sidebar"
-                style={{ marginRight: 12, cursor: 'pointer' }}
+                style={{ marginRight: 50, cursor: 'pointer', marginTop: -8 }}
                 onClick={() => {
                   console.log('Sidebar icon clicked: hiding sidebar');
                   setSidebarVisible(false);
@@ -487,16 +598,17 @@ const Chat = () => {
             padding: '0 24px'
           }}>
             {/* Left section: sidebar icon + model dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', userSelect: 'none' }}>
               {!sidebarVisible && (
                 <Icon
                   name="sidebar"
-                  style={{ marginRight: 12, cursor: 'pointer' }}
+                  style={{ marginRight: 50, cursor: 'pointer' }}
                   onClick={() => setSidebarVisible(true)}
                 />
               )}
               <div style={{ minWidth: 0, position: 'relative', zIndex: 20 }}>
                 <div
+                  className="model-dropdown-button"
                   style={{
                     ...styles.modelDropdown,
                     background: dropdownHover ? '#f0f0f0' : '#fff',
@@ -516,7 +628,9 @@ const Chat = () => {
                       <img
                         src={selectedModel.img}
                         alt={selectedModel.model}
-                        style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }}
+                        style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none', outline: 'none', background: 'transparent' }}
+                        draggable={false}
+                        tabIndex={-1}
                       />
                     )}
                     <span style={styles.modelLabel}>{selectedModel.model}</span>
@@ -524,27 +638,34 @@ const Chat = () => {
                   <Icon name="arrow-down" style={styles.dropdownArrow} />
                 </div>
                 {showDropdown && (
-                  <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }}>
+                  <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }} className="dropdownMenu">
                     {modelOptions.map((option, idx) => (
                       <div
                         key={option.label}
                         style={{
                           ...styles.dropdownItem,
-                          ...(selectedModel.label === option.label ? styles.dropdownSelected : {}),
-                          display: 'flex', 
+                          display: 'flex',
                           flexDirection: 'column',
-                          padding: '0.8rem 1.2rem'
+                          padding: '0.8rem 1.2rem',
+                          background: selectedModel.label === option.label ? '#fff' : undefined,
+                          color: selectedModel.label === option.label ? '#222' : undefined,
+                          position: 'relative',
                         }}
                         onClick={() => {
                           setSelectedModel(option);
                           setShowDropdown(false);
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                          {option.img && (
-                            <img src={option.img} alt={option.model} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4, justifyContent: 'space-between' }}>
+                          <span style={{ display: 'flex', alignItems: 'center' }}>
+                            {option.img && (
+                              <img src={option.img} alt={option.model} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none', outline: 'none', background: 'transparent' }} draggable={false} tabIndex={-1} />
+                            )}
+                            <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
+                          </span>
+                          {selectedModel.label === option.label && (
+                            <CheckIcon style={{ marginLeft: 8, verticalAlign: 'middle' }} />
                           )}
-                          <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
                           <span style={{ fontSize: '0.75rem', color: '#666666', marginBottom: 2 }}>{option.label}</span>
@@ -556,11 +677,15 @@ const Chat = () => {
                 )}
               </div>
             </div>
+            {/* Right section: vertical dots icon */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <VerticalDotsIcon style={{ cursor: 'pointer', marginLeft: 16 }} />
+            </div>
           </div>
         </div>
         {/* Chat Window */}
         <div style={styles.chatArea}>
-          <div style={styles.centerColumn}>
+          <div className="center-column" style={styles.centerColumn}>
             {messages.length === 0 && !isLoading ? (
               <div style={styles.emptyState}>
                 <div style={styles.emptyTitle}>Ready when you are.</div>
@@ -568,6 +693,7 @@ const Chat = () => {
               </div>
             ) : (
               <div
+                className="messages-container"
                 style={{
                   ...styles.messagesContainer,
                   ...(isFirstUserMessage ? { paddingTop: '12rem' } : {})
@@ -576,6 +702,7 @@ const Chat = () => {
                 {messages.map((message, idx) => (
                   <div
                     key={message.id}
+                    className={`message ${message.role === 'user' ? 'userMessage' : 'aiMessage'}`}
                     style={{
                       ...styles.message,
                       ...(message.role === 'user' ? styles.userMessage : styles.aiMessage),
@@ -747,7 +874,7 @@ const Chat = () => {
           </div>
         </div>
         {/* Input Bar */}
-        <form style={styles.inputForm} onSubmit={handleSendMessage}>
+        <form className="input-form" style={styles.inputForm} onSubmit={handleSendMessage}>
           <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
             <input
               type="text"
@@ -792,7 +919,7 @@ const styles = {
   },
   sidebar: {
     width: '300px',
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderRight: '1px solid #e0e0e0',
     display: 'flex',
     flexDirection: 'column',
@@ -826,7 +953,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     minWidth: 0,
   },
   header: {
@@ -837,6 +964,8 @@ const styles = {
     background: '#fff',
     position: 'relative',
     zIndex: 2,
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
   modelDropdownWrapper: {
     position: 'relative',
@@ -848,28 +977,29 @@ const styles = {
     gap: '0.5rem',
     background: '#fff',
     borderRadius: '6px',
-    padding: '0.5rem 1.2rem',
-    fontSize: '1.1rem',
+    padding: '0.3rem 0.7rem',
+    fontSize: '1rem',
     fontWeight: 600,
     color: '#222',
     cursor: 'pointer',
-    minWidth: '180px',
+    minWidth: '120px',
     userSelect: 'none',
+    WebkitUserSelect: 'none',
     transition: 'background 0.2s, box-shadow 0.2s',
   },
   modelLabel: {
     flex: 1,
-    fontSize: '1.1rem',
+    fontSize: '1rem',
     fontWeight: 600,
     color: '#222',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    maxWidth: '200px'
+    maxWidth: '120px'
   },
   dropdownArrow: {
-    fontSize: '0.5rem',
-    marginLeft: '0.5rem',
+    fontSize: '0.45rem',
+    marginLeft: '0.4rem',
   },
   dropdownMenu: {
     position: 'absolute',
@@ -879,14 +1009,16 @@ const styles = {
     border: '1px solid #e0e0e0',
     borderRadius: '6px',
     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-    minWidth: '440px',
-    maxHeight: '500px',
+    minWidth: '260px',
+    maxHeight: '350px',
     overflowY: 'auto',
     zIndex: 10,
-    padding: '0.5rem 0',
+    padding: '0.2rem 0',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
   dropdownItem: {
-    padding: '0.7rem 1.2rem',
+    padding: '0.5rem 0.7rem',
     cursor: 'pointer',
     transition: 'background 0.2s',
   },
@@ -898,7 +1030,7 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     position: 'relative',
     minHeight: 0,
     justifyContent: 'center',
@@ -978,10 +1110,13 @@ const styles = {
     alignItems: 'center',
     gap: '0.5rem',
     padding: '1.2rem 2rem',
-    borderTop: '1px solid #e0e0e0',
+    borderTop: 'none',
     background: '#fff',
     position: 'relative',
     zIndex: 2,
+    width: '70%',
+    maxWidth: '70%',
+    margin: '0 auto',
   },
   input: {
     flex: 1,
@@ -1018,7 +1153,7 @@ const styles = {
     color: '#1976d2',
   },
   centerColumn: {
-    width: '75%',
+    width: '100%',
     minWidth: 0,
     maxWidth: '1000px',
     display: 'flex',
