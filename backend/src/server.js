@@ -752,8 +752,6 @@ app.post('/api/auth/check-lockout', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
-
 (async () => {
   try {
     await initializeDatabase();    // Step 1: Reset DB
