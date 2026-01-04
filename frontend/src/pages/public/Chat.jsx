@@ -31,6 +31,8 @@ const Icon = ({ name, style = {}, className = '', onClick }) => {
       return <DeleteIcon style={style} className={className} onClick={onClick} />;
     case 'send':
       return <SendIcon style={style} className={className} onClick={onClick} />;
+    case 'compare':
+      return <CompareIcon style={style} className={className} onClick={onClick} />;
     default:
       return null;
   }
