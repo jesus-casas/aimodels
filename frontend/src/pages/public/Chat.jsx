@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon, CheckIcon, VerticalDotsIcon } from '../../icons';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon, CheckIcon, VerticalDotsIcon, CompareIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -679,9 +679,10 @@ const Chat = () => {
                 )}
               </div>
             </div>
-            {/* Right section: vertical dots icon */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <VerticalDotsIcon style={{ cursor: 'pointer', marginLeft: 16 }} />
+            {/* Right section: compare icon and vertical dots icon */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <CompareIcon style={{ cursor: 'pointer' }} />
+              <VerticalDotsIcon style={{ cursor: 'pointer' }} />
             </div>
           </div>
         </div>
