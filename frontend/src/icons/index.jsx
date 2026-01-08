@@ -56,6 +56,22 @@ export const SidebarIcon = ({ style = {}, className = '', onClick }) => (
   </svg>
 );
 
+export const CompareIcon = ({ style = {}, className = '', onClick }) => (
+  <svg
+    width="25"
+    height="25"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    style={style}
+    className={className}
+    onClick={onClick}
+  >
+    <path d="M2 4h9v1H3v15h8v1H2zm10 19h1V2h-1zM8.283 10.283l-.566-.566L4.934 12.5l2.783 2.783.566-.566L6.566 13H11v-1H6.566zM14 12h4.08l-1.54-1.54.92-.92 2.96 2.96-2.96 2.96-.92-.92L18.08 13H14v8h9V4h-9z" />
+    <path fill="none" d="M0 0h24v24H0z" />
+  </svg>
+);
+
 export const InterfaceIcon = ({ style = {}, className = '', onClick }) => (
   <svg 
     width="28" 

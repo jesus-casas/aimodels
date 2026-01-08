@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import { tempChatAPI } from '../../services/api';
-import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon, CheckIcon, VerticalDotsIcon } from '../../icons';
+import { FolderIcon, EditIcon, SidebarIcon, InterfaceIcon, ArrowDownIcon, DeleteIcon, SendIcon, CheckIcon, VerticalDotsIcon, CompareIcon } from '../../icons';
 import googleLogo from '../../images/google-icon-logo-svgrepo-com.svg';
 import openaiLogo from '../../images/openai-svgrepo-com.svg';
 import anthropicLogo from '../../images/anthropic.svg';
@@ -31,9 +31,204 @@ const Icon = ({ name, style = {}, className = '', onClick }) => {
       return <DeleteIcon style={style} className={className} onClick={onClick} />;
     case 'send':
       return <SendIcon style={style} className={className} onClick={onClick} />;
+    case 'compare':
+      return <CompareIcon style={style} className={className} onClick={onClick} />;
     default:
       return null;
   }
+};
+
+// Reusable ChatWindow component for rendering messages
+const ChatWindow = ({ messages, isLoading, messagesEndRef, isFirstUserMessage }) => {
+  return (
+    <div className="center-column" style={styles.centerColumn}>
+      {messages.length === 0 && !isLoading ? (
+        <div style={styles.emptyState}>
+          <div style={styles.emptyTitle}>Ready when you are.</div>
+          <div style={styles.emptySubtitle}>Start a conversation with today's highest performing AI models.</div>
+        </div>
+      ) : (
+        <div
+          className="messages-container"
+          style={{
+            ...styles.messagesContainer,
+            ...(isFirstUserMessage ? { paddingTop: '12rem' } : {})
+          }}
+        >
+          {messages.map((message, idx) => (
+            <div
+              key={message.id}
+              className={`message ${message.role === 'user' ? 'userMessage' : 'aiMessage'}`}
+              style={{
+                ...styles.message,
+                ...(message.role === 'user' ? styles.userMessage : styles.aiMessage),
+                ...(message.role === 'user' && idx === 0 ? styles.firstUserMessage : {}),
+              }}
+            >
+              <div style={styles.messageContent}>
+                {message.role === 'assistant' ? (
+                  <ReactMarkdown
+                    children={message.content}
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={{
+                      code({node, inline, className, children, ...props}) {
+                        return !inline ? (
+                          <SyntaxHighlighter style={oneLight} language={className?.replace('language-', '')}>
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        ) : (
+                          <code style={{background: '#eee', borderRadius: 4, padding: '2px 4px'}} {...props}>{children}</code>
+                        );
+                      },
+                      hr() {
+                        return (
+                          <hr
+                            style={{
+                              border: 'none',
+                              borderTop: '1.5px solid #e0e0e0',
+                              borderRadius: '2px',
+                              margin: '2.5rem 0',
+                              width: '80%',
+                            }}
+                          />
+                        );
+                      },
+                      ul({children, ...props}) {
+                        return <ul style={styles.markdownList} {...props}>{children}</ul>;
+                      },
+                      ol({children, ...props}) {
+                        return <ol style={styles.markdownList} {...props}>{children}</ol>;
+                      },
+                      li({children, ...props}) {
+                        return <li style={styles.markdownListItem} {...props}>{children}</li>;
+                      },
+                      table({children, ...props}) {
+                        return (
+                          <div style={{ 
+                            overflowX: 'auto', 
+                            margin: '1rem 0',
+                            width: '100%',
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e0'
+                          }}>
+                            <table style={{ 
+                              borderCollapse: 'collapse', 
+                              width: '100%',
+                              fontSize: '0.95rem',
+                              lineHeight: 1.5
+                            }} {...props}>
+                              {children}
+                            </table>
+                          </div>
+                        );
+                      },
+                      th({children, ...props}) {
+                        return (
+                          <th style={{ 
+                            border: '1px solid #e0e0e0', 
+                            padding: '0.75rem 1rem',
+                            background: '#f5f5f5',
+                            fontWeight: 600,
+                            textAlign: 'left',
+                            color: '#333'
+                          }} {...props}>
+                            {children}
+                          </th>
+                        );
+                      },
+                      td({children, ...props}) {
+                        return (
+                          <td style={{ 
+                            border: '1px solid #e0e0e0', 
+                            padding: '0.75rem 1rem',
+                            color: '#333'
+                          }} {...props}>
+                            {children}
+                          </td>
+                        );
+                      },
+                      blockquote({children, ...props}) {
+                        return (
+                          <blockquote style={{
+                            borderLeft: '4px solid #1976d2',
+                            background: '#f7fafd',
+                            margin: '1.5em 0',
+                            padding: '0.8em 1.2em',
+                            color: '#333',
+                            fontStyle: 'italic',
+                            borderRadius: '6px',
+                          }} {...props}>
+                            {children}
+                          </blockquote>
+                        );
+                      },
+                      img({src, alt, ...props}) {
+                        return (
+                          <img
+                            src={src}
+                            alt={alt}
+                            style={{
+                              maxWidth: '100%',
+                              height: 'auto',
+                              display: 'block',
+                              margin: '1.2em auto',
+                              borderRadius: '8px',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                            }}
+                            {...props}
+                          />
+                        );
+                      },
+                      a({href, children, ...props}) {
+                        return (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#1976d2',
+                              textDecoration: 'underline',
+                              wordBreak: 'break-all',
+                              cursor: 'pointer',
+                            }}
+                            {...props}
+                          >
+                            {children}
+                          </a>
+                        );
+                      },
+                      h1({children, ...props}) {
+                        return <h1 style={{ fontSize: '2.2rem', fontWeight: 700, margin: '1.2em 0 0.7em 0', color: '#222' }} {...props}>{children}</h1>;
+                      },
+                      h2({children, ...props}) {
+                        return <h2 style={{ fontSize: '1.7rem', fontWeight: 600, margin: '1.1em 0 0.6em 0', color: '#222' }} {...props}>{children}</h2>;
+                      },
+                      h3({children, ...props}) {
+                        return <h3 style={{ fontSize: '1.3rem', fontWeight: 600, margin: '1em 0 0.5em 0', color: '#222' }} {...props}>{children}</h3>;
+                      },
+                      h4({children, ...props}) {
+                        return <h4 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0.9em 0 0.4em 0', color: '#222' }} {...props}>{children}</h4>;
+                      },
+                      h5({children, ...props}) {
+                        return <h5 style={{ fontSize: '1rem', fontWeight: 600, margin: '0.8em 0 0.3em 0', color: '#222' }} {...props}>{children}</h5>;
+                      },
+                      h6({children, ...props}) {
+                        return <h6 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0.7em 0 0.2em 0', color: '#222' }} {...props}>{children}</h6>;
+                      },
+                    }}
+                  />
+                ) : (
+                  message.content
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+    </div>
+  );
 };
 
 const modelOptions = [
@@ -119,6 +314,11 @@ const Chat = () => {
   const dropdownRef = useRef(null);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeout = useRef(null);
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedModel2, setSelectedModel2] = useState(null);
+  const [messages2, setMessages2] = useState([]);
+  const [isLoading2, setIsLoading2] = useState(false);
+  const messagesEndRef2 = useRef(null);
 
   // Get or generate a session_id for anonymous users
   const getSessionId = () => {
@@ -165,13 +365,20 @@ const Chat = () => {
         try {
           const msgs = await tempChatAPI.getMessages(selectedChat);
           setMessages(msgs);
+          // In compare mode, sync user messages to second window
+          if (isCompareMode && selectedModel2) {
+            const userMessages = msgs.filter(m => m.role === 'user');
+            setMessages2(userMessages);
+          } else {
+            setMessages2([]);
+          }
         } catch (error) {
           console.error('Failed to load messages:', error);
         }
       };
       loadMessages();
     }
-  }, [selectedChat]);
+  }, [selectedChat, isCompareMode, selectedModel2]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -180,6 +387,27 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const scrollToBottom2 = () => {
+    messagesEndRef2.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (isCompareMode) {
+      scrollToBottom2();
+    }
+  }, [messages2, isCompareMode]);
+
+  // Sync user messages to second window when compare mode is toggled on
+  useEffect(() => {
+    if (isCompareMode && selectedModel2 && selectedChat && messages.length > 0) {
+      const userMessages = messages.filter(m => m.role === 'user');
+      setMessages2(userMessages);
+    } else if (!isCompareMode) {
+      setMessages2([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCompareMode, selectedModel2]);
 
   // For interface icon animation
   const [interfaceFade, setInterfaceFade] = useState(false);
@@ -235,23 +463,8 @@ const Chat = () => {
     }
   }, []);
 
-  // func: send message to the server 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim() || !selectedChat) return;
-
-    const newMessage = {
-      id: Date.now(),
-      content: input,
-      role: 'user',
-      timestamp: new Date().toISOString()
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    // Supported models for streaming (all current OpenAI models)
+  // Helper function to send message to a specific model
+  const sendToModel = async (model, messageContent, setMessagesState, setIsLoadingState, messageIdOffset = 0) => {
     const streamingModels = [
       'chatgpt-4o-latest',
       'o3-2025-04-16',
@@ -260,12 +473,11 @@ const Chat = () => {
       'o4-mini-2025-04-16',
       'o1-2024-12-17',
     ];
-    const isStreaming = streamingModels.includes(selectedModel.label.toLowerCase());
+    const isStreaming = streamingModels.includes(model.label.toLowerCase());
 
     if (isStreaming) {
-      // Streaming implementation
-      let aiMessageId = Date.now() + 1;
-      setMessages(prev => [
+      let aiMessageId = Date.now() + 1 + messageIdOffset;
+      setMessagesState(prev => [
         ...prev,
         {
           id: aiMessageId,
@@ -278,8 +490,8 @@ const Chat = () => {
         const reader = await tempChatAPI.completeChatStream({
           chat_id: selectedChat,
           role: 'user',
-          content: input,
-          model: selectedModel.label.toLowerCase()
+          content: messageContent,
+          model: model.label.toLowerCase()
         });
         let aiContent = '';
         let done = false;
@@ -287,13 +499,12 @@ const Chat = () => {
           const { value, done: streamDone } = await reader.read();
           if (streamDone) break;
           const chunk = new TextDecoder().decode(value);
-          // SSE: data: { ... }\n\n
           chunk.split(/\n\n/).forEach(line => {
             if (line.startsWith('data: ')) {
               const data = JSON.parse(line.replace('data: ', ''));
               if (data.delta) {
                 aiContent += data.delta;
-                setMessages(prevMsgs => prevMsgs.map(m =>
+                setMessagesState(prevMsgs => prevMsgs.map(m =>
                   m.id === aiMessageId ? { ...m, content: aiContent } : m
                 ));
               }
@@ -301,7 +512,7 @@ const Chat = () => {
                 done = true;
               }
               if (data.error) {
-                setMessages(prevMsgs => prevMsgs.map(m =>
+                setMessagesState(prevMsgs => prevMsgs.map(m =>
                   m.id === aiMessageId ? { ...m, content: '[Error: ' + data.error + ']' } : m
                 ));
                 done = true;
@@ -309,39 +520,207 @@ const Chat = () => {
             }
           });
         }
-        setIsLoading(false);
-        await loadChats();
+        setIsLoadingState(false);
       } catch (error) {
-        setIsLoading(false);
-        setMessages(prevMsgs => prevMsgs.map(m =>
+        setIsLoadingState(false);
+        setMessagesState(prevMsgs => prevMsgs.map(m =>
           m.id === aiMessageId ? { ...m, content: '[Streaming error]' } : m
         ));
       }
     } else {
-      // Fallback to non-streaming
       try {
         const aiResponse = await tempChatAPI.completeChat({
           chat_id: selectedChat,
           role: 'user',
-          content: input,
-          model: selectedModel.label.toLowerCase()
+          content: messageContent,
+          model: model.label.toLowerCase()
         });
-        setMessages(prev => [
+        setMessagesState(prev => [
           ...prev,
           {
-            id: Date.now() + 1,
+            id: Date.now() + 1 + messageIdOffset,
             content: aiResponse.content,
             role: 'assistant',
             timestamp: new Date().toISOString()
           }
         ]);
-        setIsLoading(false);
-        await loadChats();
+        setIsLoadingState(false);
       } catch (error) {
         console.error('Failed to send message:', error);
-        setIsLoading(false);
+        setIsLoadingState(false);
       }
     }
+  };
+
+  // func: send message to the server 
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!input.trim() || !selectedChat) return;
+    if (isCompareMode && !selectedModel2) {
+      alert('Please select a second model for comparison');
+      return;
+    }
+
+    const messageContent = input;
+    const newMessage = {
+      id: Date.now(),
+      content: messageContent,
+      role: 'user',
+      timestamp: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    if (isCompareMode && selectedModel2) {
+      setMessages2(prev => [...prev, { ...newMessage, id: Date.now() + 0.5 }]);
+    }
+    setInput('');
+    setIsLoading(true);
+    if (isCompareMode && selectedModel2) {
+      setIsLoading2(true);
+    }
+
+    // Use compare endpoint if in compare mode, otherwise use single model endpoint
+    if (isCompareMode && selectedModel2) {
+      const streamingModels = [
+        'chatgpt-4o-latest',
+        'o3-2025-04-16',
+        'gpt-4.5-preview-2025-02-27',
+        'gpt-4.1-2025-04-14',
+        'o4-mini-2025-04-16',
+        'o1-2024-12-17',
+      ];
+      const isStreaming1 = streamingModels.includes(selectedModel.label.toLowerCase());
+      const isStreaming2 = streamingModels.includes(selectedModel2.label.toLowerCase());
+      const isStreaming = isStreaming1 || isStreaming2;
+
+      if (isStreaming) {
+        // Streaming compare mode
+        let aiMessageId1 = Date.now() + 1;
+        let aiMessageId2 = Date.now() + 2;
+        setMessages(prev => [
+          ...prev,
+          {
+            id: aiMessageId1,
+            content: '',
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        setMessages2(prev => [
+          ...prev,
+          {
+            id: aiMessageId2,
+            content: '',
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        try {
+          const reader = await tempChatAPI.completeChatCompareStream({
+            chat_id: selectedChat,
+            role: 'user',
+            content: messageContent,
+            model1: selectedModel.label.toLowerCase(),
+            model2: selectedModel2.label.toLowerCase()
+          });
+          let aiContent1 = '';
+          let aiContent2 = '';
+          let allDone = false;
+          while (!allDone) {
+            const { value, done: streamDone } = await reader.read();
+            if (streamDone) break;
+            const chunk = new TextDecoder().decode(value);
+            chunk.split(/\n\n/).forEach(line => {
+              if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.replace('data: ', ''));
+                if (data.model === 'model1' && data.delta) {
+                  aiContent1 += data.delta;
+                  setMessages(prevMsgs => prevMsgs.map(m =>
+                    m.id === aiMessageId1 ? { ...m, content: aiContent1 } : m
+                  ));
+                } else if (data.model === 'model2' && data.delta) {
+                  aiContent2 += data.delta;
+                  setMessages2(prevMsgs => prevMsgs.map(m =>
+                    m.id === aiMessageId2 ? { ...m, content: aiContent2 } : m
+                  ));
+                }
+                if (data.model === 'model1' && data.done) {
+                  setIsLoading(false);
+                }
+                if (data.model === 'model2' && data.done) {
+                  setIsLoading2(false);
+                }
+                if (data.allDone) {
+                  allDone = true;
+                }
+                if (data.error) {
+                  if (data.model === 'model1') {
+                    setMessages(prevMsgs => prevMsgs.map(m =>
+                      m.id === aiMessageId1 ? { ...m, content: '[Error: ' + data.error + ']' } : m
+                    ));
+                    setIsLoading(false);
+                  } else if (data.model === 'model2') {
+                    setMessages2(prevMsgs => prevMsgs.map(m =>
+                      m.id === aiMessageId2 ? { ...m, content: '[Error: ' + data.error + ']' } : m
+                    ));
+                    setIsLoading2(false);
+                  }
+                }
+              }
+            });
+          }
+        } catch (error) {
+          setIsLoading(false);
+          setIsLoading2(false);
+          setMessages(prevMsgs => prevMsgs.map(m =>
+            m.id === aiMessageId1 ? { ...m, content: '[Streaming error]' } : m
+          ));
+          setMessages2(prevMsgs => prevMsgs.map(m =>
+            m.id === aiMessageId2 ? { ...m, content: '[Streaming error]' } : m
+          ));
+        }
+      } else {
+        // Non-streaming compare mode
+        try {
+          const response = await tempChatAPI.completeChatCompare({
+            chat_id: selectedChat,
+            role: 'user',
+            content: messageContent,
+            model1: selectedModel.label.toLowerCase(),
+            model2: selectedModel2.label.toLowerCase()
+          });
+          setMessages(prev => [
+            ...prev,
+            {
+              id: Date.now() + 1,
+              content: response.model1.content,
+              role: 'assistant',
+              timestamp: new Date().toISOString()
+            }
+          ]);
+          setMessages2(prev => [
+            ...prev,
+            {
+              id: Date.now() + 2,
+              content: response.model2.content,
+              role: 'assistant',
+              timestamp: new Date().toISOString()
+            }
+          ]);
+          setIsLoading(false);
+          setIsLoading2(false);
+        } catch (error) {
+          console.error('Failed to send message:', error);
+          setIsLoading(false);
+          setIsLoading2(false);
+        }
+      }
+    } else {
+      // Single model mode - use existing sendToModel function
+      await sendToModel(selectedModel, messageContent, setMessages, setIsLoading, 0);
+    }
+
+    await loadChats();
   };
 
   const handleNewChat = async () => {
@@ -581,7 +960,10 @@ const Chat = () => {
         </div>
       )}
       {/* Main Chat Area */}
-      <div style={styles.mainArea}>
+      <div style={{
+        ...styles.mainArea,
+        flexDirection: isCompareMode ? 'column' : 'column'
+      }}>
         {/* Header with model dropdown */}
         <div
           style={{
@@ -639,240 +1021,196 @@ const Chat = () => {
                 </div>
                 {showDropdown && (
                   <div ref={dropdownRef} style={{ ...styles.dropdownMenu, zIndex: 20 }} className="dropdownMenu">
-                    {modelOptions.map((option, idx) => (
-                      <div
-                        key={option.label}
-                        style={{
-                          ...styles.dropdownItem,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          padding: '0.8rem 1.2rem',
-                          background: selectedModel.label === option.label ? '#fff' : undefined,
-                          color: selectedModel.label === option.label ? '#222' : undefined,
-                          position: 'relative',
-                        }}
-                        onClick={() => {
-                          setSelectedModel(option);
-                          setShowDropdown(false);
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4, justifyContent: 'space-between' }}>
-                          <span style={{ display: 'flex', alignItems: 'center' }}>
-                            {option.img && (
-                              <img src={option.img} alt={option.model} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none', outline: 'none', background: 'transparent' }} draggable={false} tabIndex={-1} />
-                            )}
-                            <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
-                          </span>
-                          {selectedModel.label === option.label && (
-                            <CheckIcon style={{ marginLeft: 8, verticalAlign: 'middle' }} />
-                          )}
+                    {modelOptions.map((option, idx) => {
+                      const isModel1 = selectedModel.label === option.label;
+                      const isModel2 = selectedModel2 && selectedModel2.label === option.label;
+                      const isSelected = isModel1 || isModel2;
+                      return (
+                        <div
+                          key={option.label}
+                          style={{
+                            ...styles.dropdownItem,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: '0.8rem 1.2rem',
+                            background: isModel1 ? '#e3f2fd' : isModel2 ? '#ffebee' : undefined,
+                            color: isSelected ? '#222' : undefined,
+                            position: 'relative',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => {
+                            if (isCompareMode) {
+                              // In compare mode, allow selecting two models
+                              if (isModel1) {
+                                // If clicking model 1, do nothing (can't deselect)
+                                return;
+                              } else if (isModel2) {
+                                // If clicking model 2, deselect it
+                                setSelectedModel2(null);
+                              } else {
+                                // Select as model 2
+                                setSelectedModel2(option);
+                              }
+                            } else {
+                              // Normal mode: select as model 1
+                              setSelectedModel(option);
+                              setShowDropdown(false);
+                            }
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4, justifyContent: 'space-between' }}>
+                            <span style={{ display: 'flex', alignItems: 'center' }}>
+                              {option.img && (
+                                <img src={option.img} alt={option.model} style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain', userSelect: 'none', pointerEvents: 'none', outline: 'none', background: 'transparent' }} draggable={false} tabIndex={-1} />
+                              )}
+                              <span style={{ fontSize: '1rem', fontWeight: 500 }}>{option.model}</span>
+                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              {isModel1 && (
+                                <span style={{ 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: 600, 
+                                  background: '#1976d2',
+                                  color: '#fff',
+                                  borderRadius: '50%',
+                                  width: '20px',
+                                  height: '20px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>1</span>
+                              )}
+                              {isModel2 && (
+                                <span style={{ 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: 600, 
+                                  background: '#d32f2f',
+                                  color: '#fff',
+                                  borderRadius: '50%',
+                                  width: '20px',
+                                  height: '20px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>2</span>
+                              )}
+                              {!isCompareMode && isModel1 && (
+                                <CheckIcon style={{ marginLeft: 8, verticalAlign: 'middle' }} />
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
+                            <span style={{ fontSize: '0.75rem', color: '#666666', marginBottom: 2 }}>{option.label}</span>
+                            <span style={{ fontSize: '0.85rem', color: '#666666' }}>{option.desc}</span>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
-                          <span style={{ fontSize: '0.75rem', color: '#666666', marginBottom: 2 }}>{option.label}</span>
-                          <span style={{ fontSize: '0.85rem', color: '#666666' }}>{option.desc}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </div>
-            {/* Right section: vertical dots icon */}
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <VerticalDotsIcon style={{ cursor: 'pointer', marginLeft: 16 }} />
+            {/* Right section: compare icon and vertical dots icon */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <CompareIcon 
+                style={{ 
+                  cursor: 'pointer',
+                  opacity: isCompareMode ? 1 : 0.6,
+                  color: isCompareMode ? '#1976d2' : 'currentColor'
+                }} 
+                onClick={() => {
+                  if (!isCompareMode) {
+                    setIsCompareMode(true);
+                    // Auto-select second model if not selected
+                    if (!selectedModel2 && modelOptions.length > 1) {
+                      const nextModel = modelOptions.find(m => m.label !== selectedModel.label) || modelOptions[1] || modelOptions[0];
+                      setSelectedModel2(nextModel);
+                    }
+                  } else {
+                    setIsCompareMode(false);
+                    setSelectedModel2(null);
+                    setMessages2([]);
+                  }
+                }}
+              />
+              <VerticalDotsIcon style={{ cursor: 'pointer' }} />
             </div>
           </div>
         </div>
-        {/* Chat Window */}
-        <div style={styles.chatArea}>
-          <div className="center-column" style={styles.centerColumn}>
-            {messages.length === 0 && !isLoading ? (
-              <div style={styles.emptyState}>
-                <div style={styles.emptyTitle}>Ready when you are.</div>
-                <div style={styles.emptySubtitle}>Start a conversation with today's highest performing AI models.</div>
+        {/* Chat Window(s) */}
+        {isCompareMode && selectedModel2 ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            minHeight: 0
+          }}>
+            {/* First Chat Window */}
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0,
+              borderRight: '1px solid #e0e0e0'
+            }}>
+              <div style={styles.chatArea}>
+                <ChatWindow 
+                  messages={messages} 
+                  isLoading={isLoading} 
+                  messagesEndRef={messagesEndRef}
+                  isFirstUserMessage={isFirstUserMessage}
+                />
               </div>
-            ) : (
-              <div
-                className="messages-container"
-                style={{
-                  ...styles.messagesContainer,
-                  ...(isFirstUserMessage ? { paddingTop: '12rem' } : {})
-                }}
-              >
-                {messages.map((message, idx) => (
-                  <div
-                    key={message.id}
-                    className={`message ${message.role === 'user' ? 'userMessage' : 'aiMessage'}`}
-                    style={{
-                      ...styles.message,
-                      ...(message.role === 'user' ? styles.userMessage : styles.aiMessage),
-                      ...(message.role === 'user' && idx === 0 ? styles.firstUserMessage : {}),
-                    }}
-                  >
-                    <div style={styles.messageContent}>
-                      {message.role === 'assistant' ? (
-                        <ReactMarkdown
-                          children={message.content}
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
-                          components={{
-                            code({node, inline, className, children, ...props}) {
-                              return !inline ? (
-                                <SyntaxHighlighter style={oneLight} language={className?.replace('language-', '')}>
-                                  {String(children).replace(/\n$/, '')}
-                                </SyntaxHighlighter>
-                              ) : (
-                                <code style={{background: '#eee', borderRadius: 4, padding: '2px 4px'}} {...props}>{children}</code>
-                              );
-                            },
-                            hr() {
-                              return (
-                                <hr
-                                  style={{
-                                    border: 'none',
-                                    borderTop: '1.5px solid #e0e0e0',
-                                    borderRadius: '2px',
-                                    margin: '2.5rem 0',
-                                    width: '80%',
-                                  }}
-                                />
-                              );
-                            },
-                            ul({children, ...props}) {
-                              return <ul style={styles.markdownList} {...props}>{children}</ul>;
-                            },
-                            ol({children, ...props}) {
-                              return <ol style={styles.markdownList} {...props}>{children}</ol>;
-                            },
-                            li({children, ...props}) {
-                              return <li style={styles.markdownListItem} {...props}>{children}</li>;
-                            },
-                            table({children, ...props}) {
-                              return (
-                                <div style={{ 
-                                  overflowX: 'auto', 
-                                  margin: '1rem 0',
-                                  width: '100%',
-                                  borderRadius: '8px',
-                                  border: '1px solid #e0e0e0'
-                                }}>
-                                  <table style={{ 
-                                    borderCollapse: 'collapse', 
-                                    width: '100%',
-                                    fontSize: '0.95rem',
-                                    lineHeight: 1.5
-                                  }} {...props}>
-                                    {children}
-                                  </table>
-                                </div>
-                              );
-                            },
-                            th({children, ...props}) {
-                              return (
-                                <th style={{ 
-                                  border: '1px solid #e0e0e0', 
-                                  padding: '0.75rem 1rem',
-                                  background: '#f5f5f5',
-                                  fontWeight: 600,
-                                  textAlign: 'left',
-                                  color: '#333'
-                                }} {...props}>
-                                  {children}
-                                </th>
-                              );
-                            },
-                            td({children, ...props}) {
-                              return (
-                                <td style={{ 
-                                  border: '1px solid #e0e0e0', 
-                                  padding: '0.75rem 1rem',
-                                  color: '#333'
-                                }} {...props}>
-                                  {children}
-                                </td>
-                              );
-                            },
-                            blockquote({children, ...props}) {
-                              return (
-                                <blockquote style={{
-                                  borderLeft: '4px solid #1976d2',
-                                  background: '#f7fafd',
-                                  margin: '1.5em 0',
-                                  padding: '0.8em 1.2em',
-                                  color: '#333',
-                                  fontStyle: 'italic',
-                                  borderRadius: '6px',
-                                }} {...props}>
-                                  {children}
-                                </blockquote>
-                              );
-                            },
-                            img({src, alt, ...props}) {
-                              return (
-                                <img
-                                  src={src}
-                                  alt={alt}
-                                  style={{
-                                    maxWidth: '100%',
-                                    height: 'auto',
-                                    display: 'block',
-                                    margin: '1.2em auto',
-                                    borderRadius: '8px',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                                  }}
-                                  {...props}
-                                />
-                              );
-                            },
-                            a({href, children, ...props}) {
-                              return (
-                                <a
-                                  href={href}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    color: '#1976d2',
-                                    textDecoration: 'underline',
-                                    wordBreak: 'break-all',
-                                    cursor: 'pointer',
-                                  }}
-                                  {...props}
-                                >
-                                  {children}
-                                </a>
-                              );
-                            },
-                            h1({children, ...props}) {
-                              return <h1 style={{ fontSize: '2.2rem', fontWeight: 700, margin: '1.2em 0 0.7em 0', color: '#222' }} {...props}>{children}</h1>;
-                            },
-                            h2({children, ...props}) {
-                              return <h2 style={{ fontSize: '1.7rem', fontWeight: 600, margin: '1.1em 0 0.6em 0', color: '#222' }} {...props}>{children}</h2>;
-                            },
-                            h3({children, ...props}) {
-                              return <h3 style={{ fontSize: '1.3rem', fontWeight: 600, margin: '1em 0 0.5em 0', color: '#222' }} {...props}>{children}</h3>;
-                            },
-                            h4({children, ...props}) {
-                              return <h4 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0.9em 0 0.4em 0', color: '#222' }} {...props}>{children}</h4>;
-                            },
-                            h5({children, ...props}) {
-                              return <h5 style={{ fontSize: '1rem', fontWeight: 600, margin: '0.8em 0 0.3em 0', color: '#222' }} {...props}>{children}</h5>;
-                            },
-                            h6({children, ...props}) {
-                              return <h6 style={{ fontSize: '0.95rem', fontWeight: 600, margin: '0.7em 0 0.2em 0', color: '#222' }} {...props}>{children}</h6>;
-                            },
-                          }}
-                        />
-                      ) : (
-                        message.content
-                      )}
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
+            </div>
+            {/* Second Chat Window */}
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0,
+              backgroundColor: '#fff'
+            }}>
+              {/* Header for second model */}
+              <div style={{
+                ...styles.header,
+                borderBottom: '1px solid #e0e0e0',
+                height: '64px',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 24px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', userSelect: 'none' }}>
+                  {selectedModel2.img && (
+                    <img
+                      src={selectedModel2.img}
+                      alt={selectedModel2.model}
+                      style={{ width: 22, height: 22, marginRight: 8, borderRadius: 4, objectFit: 'contain', userSelect: 'none' }}
+                      draggable={false}
+                    />
+                  )}
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: '#222' }}>{selectedModel2.model}</span>
+                </div>
               </div>
-            )}
+              <div style={styles.chatArea}>
+                <ChatWindow 
+                  messages={messages2} 
+                  isLoading={isLoading2} 
+                  messagesEndRef={messagesEndRef2}
+                  isFirstUserMessage={messages2.length > 0 && messages2[0].role === 'user'}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={styles.chatArea}>
+            <ChatWindow 
+              messages={messages} 
+              isLoading={isLoading} 
+              messagesEndRef={messagesEndRef}
+              isFirstUserMessage={isFirstUserMessage}
+            />
+          </div>
+        )}
         {/* Input Bar */}
         <form className="input-form" style={styles.inputForm} onSubmit={handleSendMessage}>
           <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -882,7 +1220,7 @@ const Chat = () => {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask anything"
               style={styles.input}
-              disabled={isLoading}
+              disabled={isLoading || isLoading2}
             />
             <button
               type="submit"
@@ -899,7 +1237,7 @@ const Chat = () => {
                 justifyContent: 'center',
                 color: '#000000'
               }}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || isLoading2}
             >
               <SendIcon style={{ width: 28, height: 28 }} />
             </button>

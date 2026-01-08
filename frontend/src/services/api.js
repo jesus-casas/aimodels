@@ -284,4 +284,39 @@ export const tempChatAPI = {
     }
     return response.body.getReader(); // Return the ReadableStreamDefaultReader
   },
+
+  // Compare mode: Non-streaming completion for two models simultaneously
+  completeChatCompare: async ({ chat_id, role, content, model1, model2 }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/complete/compare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id, 
+        role, 
+        content, 
+        model1: model1.toLowerCase(),
+        model2: model2.toLowerCase()
+      })
+    });
+    return handleResponse(response);
+  },
+
+  // Compare mode: Streaming completion for two models simultaneously
+  completeChatCompareStream: async ({ chat_id, role, content, model1, model2 }) => {
+    const response = await fetch(`${API_BASE_URL}/tempchat/complete/compare/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        chat_id, 
+        role, 
+        content, 
+        model1: model1.toLowerCase(),
+        model2: model2.toLowerCase()
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Streaming request failed');
+    }
+    return response.body.getReader(); // Return the ReadableStreamDefaultReader
+  },
 }; 
