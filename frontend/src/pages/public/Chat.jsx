@@ -579,12 +579,145 @@ const Chat = () => {
       setIsLoading2(true);
     }
 
-    // Send to first model
-    await sendToModel(selectedModel, messageContent, setMessages, setIsLoading, 0);
-
-    // Send to second model if in compare mode
+    // Use compare endpoint if in compare mode, otherwise use single model endpoint
     if (isCompareMode && selectedModel2) {
-      await sendToModel(selectedModel2, messageContent, setMessages2, setIsLoading2, 2);
+      const streamingModels = [
+        'chatgpt-4o-latest',
+        'o3-2025-04-16',
+        'gpt-4.5-preview-2025-02-27',
+        'gpt-4.1-2025-04-14',
+        'o4-mini-2025-04-16',
+        'o1-2024-12-17',
+      ];
+      const isStreaming1 = streamingModels.includes(selectedModel.label.toLowerCase());
+      const isStreaming2 = streamingModels.includes(selectedModel2.label.toLowerCase());
+      const isStreaming = isStreaming1 || isStreaming2;
+
+      if (isStreaming) {
+        // Streaming compare mode
+        let aiMessageId1 = Date.now() + 1;
+        let aiMessageId2 = Date.now() + 2;
+        setMessages(prev => [
+          ...prev,
+          {
+            id: aiMessageId1,
+            content: '',
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        setMessages2(prev => [
+          ...prev,
+          {
+            id: aiMessageId2,
+            content: '',
+            role: 'assistant',
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        try {
+          const reader = await tempChatAPI.completeChatCompareStream({
+            chat_id: selectedChat,
+            role: 'user',
+            content: messageContent,
+            model1: selectedModel.label.toLowerCase(),
+            model2: selectedModel2.label.toLowerCase()
+          });
+          let aiContent1 = '';
+          let aiContent2 = '';
+          let allDone = false;
+          while (!allDone) {
+            const { value, done: streamDone } = await reader.read();
+            if (streamDone) break;
+            const chunk = new TextDecoder().decode(value);
+            chunk.split(/\n\n/).forEach(line => {
+              if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.replace('data: ', ''));
+                if (data.model === 'model1' && data.delta) {
+                  aiContent1 += data.delta;
+                  setMessages(prevMsgs => prevMsgs.map(m =>
+                    m.id === aiMessageId1 ? { ...m, content: aiContent1 } : m
+                  ));
+                } else if (data.model === 'model2' && data.delta) {
+                  aiContent2 += data.delta;
+                  setMessages2(prevMsgs => prevMsgs.map(m =>
+                    m.id === aiMessageId2 ? { ...m, content: aiContent2 } : m
+                  ));
+                }
+                if (data.model === 'model1' && data.done) {
+                  setIsLoading(false);
+                }
+                if (data.model === 'model2' && data.done) {
+                  setIsLoading2(false);
+                }
+                if (data.allDone) {
+                  allDone = true;
+                }
+                if (data.error) {
+                  if (data.model === 'model1') {
+                    setMessages(prevMsgs => prevMsgs.map(m =>
+                      m.id === aiMessageId1 ? { ...m, content: '[Error: ' + data.error + ']' } : m
+                    ));
+                    setIsLoading(false);
+                  } else if (data.model === 'model2') {
+                    setMessages2(prevMsgs => prevMsgs.map(m =>
+                      m.id === aiMessageId2 ? { ...m, content: '[Error: ' + data.error + ']' } : m
+                    ));
+                    setIsLoading2(false);
+                  }
+                }
+              }
+            });
+          }
+        } catch (error) {
+          setIsLoading(false);
+          setIsLoading2(false);
+          setMessages(prevMsgs => prevMsgs.map(m =>
+            m.id === aiMessageId1 ? { ...m, content: '[Streaming error]' } : m
+          ));
+          setMessages2(prevMsgs => prevMsgs.map(m =>
+            m.id === aiMessageId2 ? { ...m, content: '[Streaming error]' } : m
+          ));
+        }
+      } else {
+        // Non-streaming compare mode
+        try {
+          const response = await tempChatAPI.completeChatCompare({
+            chat_id: selectedChat,
+            role: 'user',
+            content: messageContent,
+            model1: selectedModel.label.toLowerCase(),
+            model2: selectedModel2.label.toLowerCase()
+          });
+          setMessages(prev => [
+            ...prev,
+            {
+              id: Date.now() + 1,
+              content: response.model1.content,
+              role: 'assistant',
+              timestamp: new Date().toISOString()
+            }
+          ]);
+          setMessages2(prev => [
+            ...prev,
+            {
+              id: Date.now() + 2,
+              content: response.model2.content,
+              role: 'assistant',
+              timestamp: new Date().toISOString()
+            }
+          ]);
+          setIsLoading(false);
+          setIsLoading2(false);
+        } catch (error) {
+          console.error('Failed to send message:', error);
+          setIsLoading(false);
+          setIsLoading2(false);
+        }
+      }
+    } else {
+      // Single model mode - use existing sendToModel function
+      await sendToModel(selectedModel, messageContent, setMessages, setIsLoading, 0);
     }
 
     await loadChats();
