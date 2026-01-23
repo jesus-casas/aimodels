@@ -5,3 +5,6 @@ This project lets users chat with the top 10 leading AI models all in one place.
 
 ### AI Assistant Chat window
 ![AI Assistant](assets/aimodels.png)
+
+### Model Dropdown Menu
+![Model Dropdown Menu](assets/model-dropdown.png)
