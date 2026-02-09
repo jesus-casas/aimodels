@@ -86,13 +86,13 @@ The frontend will typically run on `http://localhost:5173` (Vite's default port)
 ### Running the Full Application
 
 1. Start the database (if not already running)
-2. Start the backend server (in one terminal):
+2. Start the backend server:
 ```bash
 cd backend
 npm run dev
 ```
 
-3. Start the frontend server (in another terminal):
+3. Start the frontend server:
 ```bash
 cd frontend
 npm run dev
