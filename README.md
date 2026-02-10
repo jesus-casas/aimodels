@@ -6,8 +6,8 @@ Chat with the top 10 leading AI models all in one place. Whether it's for school
 ### AI Assistant Chat window
 ![AI Assistant](assets/aimodels.png)
 
-### Model Dropdown Menu
-![Model Dropdown Menu](assets/model-dropdown.png)
+## Model Dropdown Menu
+<img src="assets/model-dropdown.png" alt="Model Dropdown Menu" width="25%" />
 
 ## How to Run
 
