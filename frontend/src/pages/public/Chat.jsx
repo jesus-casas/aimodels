@@ -232,70 +232,10 @@ const ChatWindow = ({ messages, isLoading, messagesEndRef, isFirstUserMessage })
 };
 
 const modelOptions = [
-  // OpenAI Models
-  { 
-    label: 'chatgpt-4o-latest', 
-    model: 'GPT-4o', 
-    desc: 'Fast, intelligent, flexible GPT model', 
-    img: openaiLogo 
-  },
-  { 
-    label: 'o3-2025-04-16', 
-    model: 'o3', 
-    desc: 'Most powerful reasoning model', 
-    img: openaiLogo 
-  },
-  { 
-    label: 'gpt-4.5-preview-2025-02-27', 
-    model: 'GPT-4.5', 
-    desc: 'Largest and most capable GPT model', 
-    img: openaiLogo 
-  },
-  { 
-    label: 'gpt-4.1-2025-04-14', 
-    model: 'GPT-4.1', 
-    desc: 'Flagship GPT model for complex tasks', 
-    img: openaiLogo 
-  },
-  { 
-    label: 'o4-mini-2025-04-16', 
-    model: 'o4-mini', 
-    desc: 'Faster, more affordable reasoning model', 
-    img: openaiLogo 
-  },
-  { 
-    label: 'o1-2024-12-17', 
-    model: 'o1', 
-    desc: 'Previous full o-series reasoning model', 
-    img: openaiLogo 
-  },
-  // Google Models
-  { 
-    label: 'gemini-2.5-pro-preview-05-06', 
-    model: 'Gemini Pro', 
-    desc: 'Thinking, reasoning, multimodal, coding', 
-    img: googleLogo 
-  },
-  { 
-    label: 'gemini-2.5-flash-preview-05-20', 
-    model: 'Gemini Flash', 
-    desc: 'Adaptive thinking, cost efficiency', 
-    img: googleLogo 
-  },
-  // Anthropic Models
-  { 
-    label: 'claude-3-7-sonnet-20250219', 
-    model: 'Claude 3.7', 
-    desc: 'Anthropic Proprietary', 
-    img: anthropicLogo 
-  },
-  // DeepSeek Models
-  // { label: 'DeepSeek-V3-0324', model: 'DeepSeek V3', desc: 'DeepSeek MIT', img: deepseekLogo },
-  // { label: 'DeepSeek-R1', model: 'DeepSeek R1', desc: 'DeepSeek MIT', img: deepseekLogo },
-  // Qwen Models
-  // { label: 'Qwen3-235B-A22B', model: 'Qwen 3', desc: 'Alibaba Qwen Model', img: qwenColorLogo },
-  // xAI Models
-  //{ label: 'Grok', model: 'Grok', desc: 'xAI Grok Model', img: grokLogo },
+  { label: 'gpt-5.2', model: 'GPT-5.2', img: openaiLogo },
+  { label: 'gpt-5-mini', model: 'GPT-5 Mini', img: openaiLogo },
+  { label: 'gpt-5-nano', model: 'GPT-5 Nano', img: openaiLogo },
+  { label: 'gpt-5.2-pro', model: 'GPT-5.2 Pro', img: openaiLogo },
 ];
 
 const Chat = () => {
@@ -1101,7 +1041,7 @@ const Chat = () => {
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', marginLeft: 30 }}>
                             <span style={{ fontSize: '0.75rem', color: '#666666', marginBottom: 2 }}>{option.label}</span>
-                            <span style={{ fontSize: '0.85rem', color: '#666666' }}>{option.desc}</span>
+                            {option.desc && <span style={{ fontSize: '0.85rem', color: '#666666' }}>{option.desc}</span>}
                           </div>
                         </div>
                       );
