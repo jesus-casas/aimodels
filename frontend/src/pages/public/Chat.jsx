@@ -405,15 +405,7 @@ const Chat = () => {
 
   // Helper function to send message to a specific model
   const sendToModel = async (model, messageContent, setMessagesState, setIsLoadingState, messageIdOffset = 0) => {
-    const streamingModels = [
-      'chatgpt-4o-latest',
-      'o3-2025-04-16',
-      'gpt-4.5-preview-2025-02-27',
-      'gpt-4.1-2025-04-14',
-      'o4-mini-2025-04-16',
-      'o1-2024-12-17',
-    ];
-    const isStreaming = streamingModels.includes(model.label.toLowerCase());
+    const isStreaming = modelOptions.some(o => o.label.toLowerCase() === model.label.toLowerCase());
 
     if (isStreaming) {
       let aiMessageId = Date.now() + 1 + messageIdOffset;
@@ -521,16 +513,8 @@ const Chat = () => {
 
     // Use compare endpoint if in compare mode, otherwise use single model endpoint
     if (isCompareMode && selectedModel2) {
-      const streamingModels = [
-        'chatgpt-4o-latest',
-        'o3-2025-04-16',
-        'gpt-4.5-preview-2025-02-27',
-        'gpt-4.1-2025-04-14',
-        'o4-mini-2025-04-16',
-        'o1-2024-12-17',
-      ];
-      const isStreaming1 = streamingModels.includes(selectedModel.label.toLowerCase());
-      const isStreaming2 = streamingModels.includes(selectedModel2.label.toLowerCase());
+      const isStreaming1 = modelOptions.some(o => o.label.toLowerCase() === selectedModel.label.toLowerCase());
+      const isStreaming2 = modelOptions.some(o => o.label.toLowerCase() === selectedModel2.label.toLowerCase());
       const isStreaming = isStreaming1 || isStreaming2;
 
       if (isStreaming) {
