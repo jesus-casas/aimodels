@@ -6,14 +6,11 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Supported models
 const SUPPORTED_MODELS = [
-  'o3-2025-04-16',
-  'chatgpt-4o-latest',
-  'gpt-4.5-preview-2025-02-27',
-  'gpt-4.1-2025-04-14',
-  'o4-mini-2025-04-16',
-  'o1-2024-12-17',
-  'gpt-4o-mini',
-  // Add more as needed
+  'gpt-5.2',
+  'gpt-5-mini',
+  'gpt-5-nano',
+  'gpt-5.2-pro',
+  'gpt-4.1-mini'
 ];
 
 /**
@@ -27,12 +24,15 @@ async function callOpenAIChat(model, messages, options = {}) {
     throw new Error(`Model ${model} is not supported.`);
   }
   try {
+    const { max_tokens, max_output_tokens, max_completion_tokens, ...restOptions } = options;
+    const limit = max_completion_tokens ?? max_tokens ?? max_output_tokens;
+    const apiOptions = limit != null ? { ...restOptions, max_completion_tokens: limit } : restOptions;
     const response = await axios.post(
       OPENAI_API_URL,
       {
         model,
         messages,
-        ...options,
+        ...apiOptions,
       },
       {
         headers: {
@@ -48,16 +48,23 @@ async function callOpenAIChat(model, messages, options = {}) {
   }
 }
 
-// Streaming support (optional, for future use)
+// Streaming: returns async iterable of chunks (chunk.choices?.[0]?.delta?.content).
+// Newer models (e.g. gpt-4.1-mini, gpt-5.x) require max_completion_tokens; pass a default so streaming works for all.
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-async function callOpenAIChatStream(model, messages) {
+const DEFAULT_STREAM_MAX_TOKENS = 4096;
+
+async function callOpenAIChatStream(model, messages, options = {}) {
   if (!SUPPORTED_MODELS.includes(model)) {
     throw new Error(`Model ${model} is not supported.`);
   }
+  const { max_tokens, max_output_tokens, max_completion_tokens, ...restOptions } = options;
+  const limit = max_completion_tokens ?? max_tokens ?? max_output_tokens ?? DEFAULT_STREAM_MAX_TOKENS;
   return openai.chat.completions.create({
     model,
     messages,
     stream: true,
+    max_completion_tokens: limit,
+    ...restOptions,
   });
 }
 

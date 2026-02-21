@@ -84,7 +84,7 @@ async function generateChatTitle(message) {
   ];
 
   try {
-    const result = await callOpenAIChat('gpt-4o-mini', titlePrompt, { max_tokens: 20 });
+    const result = await callOpenAIChat('gpt-4.1-mini', titlePrompt, { max_tokens: 20 });
     return result.choices[0].message.content.trim();
   } catch (err) {
     console.error('Error generating chat title:', err);
