@@ -6,14 +6,10 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Supported models
 const SUPPORTED_MODELS = [
-  'o3-2025-04-16',
-  'chatgpt-4o-latest',
-  'gpt-4.5-preview-2025-02-27',
-  'gpt-4.1-2025-04-14',
-  'o4-mini-2025-04-16',
-  'o1-2024-12-17',
-  'gpt-4o-mini',
-  // Add more as needed
+  'gpt-5.2',
+  'gpt-5-mini',
+  'gpt-5-nano',
+  'gpt-5.2-pro',
 ];
 
 /**
