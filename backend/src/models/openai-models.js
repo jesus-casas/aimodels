@@ -10,6 +10,7 @@ const SUPPORTED_MODELS = [
   'gpt-5-mini',
   'gpt-5-nano',
   'gpt-5.2-pro',
+  'gpt-4.1-mini'
 ];
 
 /**
