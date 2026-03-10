@@ -1084,6 +1084,7 @@ const Chat = () => {
                   messagesEndRef={messagesEndRef}
                   isFirstUserMessage={isFirstUserMessage}
                 />
+                <div style={styles.chatFade} />
               </div>
             </div>
             {/* Second Chat Window */}
@@ -1122,6 +1123,7 @@ const Chat = () => {
                   messagesEndRef={messagesEndRef2}
                   isFirstUserMessage={messages2.length > 0 && messages2[0].role === 'user'}
                 />
+                <div style={styles.chatFade} />
               </div>
             </div>
           </div>
@@ -1133,6 +1135,7 @@ const Chat = () => {
               messagesEndRef={messagesEndRef}
               isFirstUserMessage={isFirstUserMessage}
             />
+            <div style={styles.chatFade} />
           </div>
         )}
         {/* Input Bar */}
@@ -1298,6 +1301,16 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+  },
+  chatFade: {
+    position: 'absolute',
+    bottom: '-16px',
+    left: 0,
+    right: 0,
+    height: '100px',
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 75%)',
+    pointerEvents: 'none',
+    zIndex: 2,
   },
   emptyState: {
     flex: 1,
