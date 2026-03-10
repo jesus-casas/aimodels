@@ -715,11 +715,6 @@ const Chat = () => {
   useEffect(() => {
     const styleTag = document.createElement('style');
     styleTag.innerHTML = `
-      .input-form {
-        width: 75% !important;
-        max-width: 75% !important;
-        margin: 0 auto !important;
-      }
       @media (max-width: 800px) {
         .input-form {
           width: 100% !important;
@@ -1389,8 +1384,8 @@ const styles = {
     background: '#fff',
     position: 'relative',
     zIndex: 2,
-    width: '70%',
-    maxWidth: '70%',
+    width: '58%',
+    maxWidth: '58%',
     margin: '0 auto',
   },
   input: {
