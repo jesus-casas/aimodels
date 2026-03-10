@@ -245,6 +245,7 @@ const Chat = () => {
   const [selectedFolder, setSelectedFolder] = useState(1);
   const [chatHistory, setChatHistory] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [hoveredChat, setHoveredChat] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
   const messagesEndRef = useRef(null);
@@ -840,10 +841,12 @@ const Chat = () => {
             </div>
           </div>
           <div style={styles.chatHistorySection}>
-            <div style={styles.chatsTitle}>Chats</div>
+            <div style={styles.chatsTitle}>Your chats</div>
             {chatHistory.map(chat => (
               <div
                 key={chat.id}
+                onMouseEnter={() => setHoveredChat(chat.id)}
+                onMouseLeave={() => setHoveredChat(null)}
                 style={{
                   ...styles.chatItem,
                   ...(selectedChat === chat.id && styles.selectedItem),
@@ -866,7 +869,7 @@ const Chat = () => {
                 >
                   {chat.title.replace(/^"(.+)"$/, '$1')}
                 </div>
-                {selectedChat === chat.id && (
+                {hoveredChat === chat.id && (
                   <Icon
                     name="delete"
                     style={{ cursor: 'pointer', marginLeft: 8 }}
@@ -1283,8 +1286,8 @@ const styles = {
     transition: 'background 0.2s',
   },
   dropdownSelected: {
-    background: '#e3f2fd',
-    color: '#1976d2',
+    background: '#e8e8e8',
+    color: '#333333',
   },
   chatArea: {
     flex: 1,
@@ -1419,8 +1422,8 @@ const styles = {
     transition: 'background 0.2s',
   },
   selectedItem: {
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: '#e8e8e8',
+    color: '#333333',
   },
   centerColumn: {
     width: '100%',
