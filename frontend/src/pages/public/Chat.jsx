@@ -829,6 +829,7 @@ const Chat = () => {
         transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease',
         minWidth: 0,
       }}>
+        <div style={{ width: '300px', minWidth: '300px', overflow: 'hidden' }}>
           <div style={styles.sidebarTop}>
             <div style={styles.sidebarTopRow}>
               <Icon
@@ -885,6 +886,7 @@ const Chat = () => {
               </div>
             ))}
           </div>
+        </div>
       </div>
       {/* Main Chat Area */}
       <div style={{
