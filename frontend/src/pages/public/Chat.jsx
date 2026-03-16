@@ -821,8 +821,14 @@ const Chat = () => {
   return (
     <div className="chat-container" style={styles.container}>
       {/* Sidebar */}
-      {sidebarVisible && (
-        <div style={styles.sidebar}>
+      <div style={{
+        ...styles.sidebar,
+        width: sidebarVisible ? '300px' : '0',
+        overflow: 'hidden',
+        opacity: sidebarVisible ? 1 : 0,
+        transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease',
+        minWidth: 0,
+      }}>
           <div style={styles.sidebarTop}>
             <div style={styles.sidebarTopRow}>
               <Icon
@@ -879,8 +885,7 @@ const Chat = () => {
               </div>
             ))}
           </div>
-        </div>
-      )}
+      </div>
       {/* Main Chat Area */}
       <div style={{
         ...styles.mainArea,
@@ -1181,13 +1186,13 @@ const styles = {
     fontFamily: 'Inter, Arial, sans-serif',
   },
   sidebar: {
-    width: '300px',
     backgroundColor: '#f5f5f5',
     borderRight: '1px solid #e0e0e0',
     display: 'flex',
     flexDirection: 'column',
     padding: 0,
     boxSizing: 'border-box',
+    flexShrink: 0,
   },
   sidebarTop: {
     padding: '1.5rem 1.5rem 0.5rem 1.5rem',
