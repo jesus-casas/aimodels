@@ -1,5 +1,5 @@
-const { query } = require('../config/db');
-const bcrypt = require('bcrypt');
+import { query } from '../config/db.js';
+import bcrypt from 'bcrypt';
 
 async function createTestUser() {
   try {
@@ -49,4 +49,4 @@ async function createTestUser() {
   }
 }
 
-module.exports = createTestUser;
+export default createTestUser;
