@@ -1,13 +1,13 @@
-const fs = require('fs');
-const path = require('path');
-const { query } = require('./db');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { query } from './db.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function initializeDatabase() {
   try {
-    // Read the SQL file
     const sql = fs.readFileSync(path.join(__dirname, 'init.sql'), 'utf8');
-    
-    // Execute the SQL commands
     await query(sql);
     console.log('Database initialized successfully');
   } catch (error) {
@@ -16,4 +16,4 @@ async function initializeDatabase() {
   }
 }
 
-module.exports = initializeDatabase;
+export default initializeDatabase;
