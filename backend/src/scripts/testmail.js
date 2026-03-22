@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { sendEmail } from '../utils/emailTransport.js';
+import { sendEmail } from '../services/emailTransport.js';
 
 // Load .env file from the project root
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
