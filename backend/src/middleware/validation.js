@@ -1,5 +1,5 @@
-const validateSignup = (req, res, next) => {
-  const { 
+export const validateSignup = (req, res, next) => {
+  const {
     username,
     email, 
     password,
