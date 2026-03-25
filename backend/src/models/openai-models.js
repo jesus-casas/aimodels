@@ -1,5 +1,5 @@
-const { OpenAI } = require("openai");
-const axios = require('axios');
+import { OpenAI } from "openai";
+import axios from "axios";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -68,4 +68,4 @@ async function callOpenAIChatStream(model, messages, options = {}) {
   });
 }
 
-module.exports = { callOpenAIChat, callOpenAIChatStream, SUPPORTED_MODELS }; 
+export { callOpenAIChat, callOpenAIChatStream, SUPPORTED_MODELS };
