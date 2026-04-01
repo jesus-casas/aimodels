@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { query } from '../config/db.js';
+import { callOpenAIChat, callOpenAIChatStream, SUPPORTED_MODELS } from '../models/openai-models.js';
+
 const router = express.Router();
-const { query } = require('../config/db');
-const { callOpenAIChat, callOpenAIChatStream, SUPPORTED_MODELS } = require('../models/openai-models');
 
 // Create a new temp chat
 router.post('/chats', async (req, res) => {
@@ -450,4 +451,4 @@ router.post('/complete/compare/stream', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router;
