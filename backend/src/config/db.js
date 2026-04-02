@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import pkg from 'pg';
+const { Pool } = pkg;
 import 'dotenv/config';
 
 const isProduction = process.env.NODE_ENV === 'production';
