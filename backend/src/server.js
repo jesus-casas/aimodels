@@ -1,16 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const { validateSignup, validateSecurityQuestions } = require('./middleware/validation');
-const { query } = require('./config/db');
-const { logDatabaseOperation } = require('./utils/logger');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { sendEmail } = require('./utils/emailTransport');
-const initializeDatabase = require('./config/init-db');
-const createTestUser = require('./scripts/create-test-user');
-const axios = require('axios');
-const tempChatRoute = require('./routes/tempChat.route');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import { validateSignup, validateSecurityQuestions } from './middleware/validation.js';
+import { query } from './config/db.js';
+import { logDatabaseOperation } from './utils/logger.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { sendEmail } from './services/emailTransport.js';
+import initializeDatabase from './config/init-db.js';
+import createTestUser from './test-scripts/create-test-user.js';
+import axios from 'axios';
+import tempChatRoute from './routes/tempChat.route.js';
+import downloadRoute from './routes/download.route.js';
+import chatRoute from './routes/chat.route.js';
+import 'dotenv/config';
 
 const app = express();
 
@@ -19,11 +21,9 @@ app.use(cors());
 app.use(express.json());
 
 // Register Download Route
-const downloadRoute = require("./routes/download.route");
 app.use("/downloads", downloadRoute);
 
 // Register Chat Route
-const chatRoute = require("./routes/chat.route");
 app.use("/api/chat", chatRoute);
 
 // Register Temp Chat Route
