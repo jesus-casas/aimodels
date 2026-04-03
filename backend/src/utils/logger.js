@@ -10,11 +10,9 @@ const colors = {
     cyan: '\x1b[36m',
 };
 
-const logDatabaseOperation = (operation, data) => {
-    console.log(
-        `${colors.cyan}[Database]${colors.reset} ${colors.green}${operation}${colors.reset}`,
-        data
-    );
+export const logDatabaseOperation = (operation, data) => {
+  console.log(
+    `${colors.cyan}[Database]${colors.reset} ${colors.green}${operation}${colors.reset}`,
+    data
+  );
 };
-
-module.exports = { logDatabaseOperation }; 

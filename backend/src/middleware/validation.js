@@ -1,5 +1,5 @@
-const validateSignup = (req, res, next) => {
-  const { 
+export const validateSignup = (req, res, next) => {
+  const {
     username,
     email, 
     password,
@@ -56,7 +56,7 @@ const validateSignup = (req, res, next) => {
   next();
 };
 
-const validateSecurityQuestions = (req, res, next) => {
+export const validateSecurityQuestions = (req, res, next) => {
   const { 
     userId,
     question1,
@@ -94,5 +94,3 @@ const validateSecurityQuestions = (req, res, next) => {
 
   next();
 };
-
-module.exports = { validateSignup, validateSecurityQuestions };

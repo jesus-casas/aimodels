@@ -1,6 +1,9 @@
-const express = require("express");
-const path = require("path");
-const fs = require('fs');
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
 
 // The full URL will be /downloads/ since we mounted at /downloads in server.js
@@ -26,4 +29,4 @@ router.get("/", (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
